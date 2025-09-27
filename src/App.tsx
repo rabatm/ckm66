@@ -3,10 +3,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { LoginForm } from '@/features/auth/components/LoginForm';
 import { MainApp } from '@/features/main/screens/MainApp';
-import { configureAuthService } from '@/features/auth/services/authConfig';
 
-// Configurer le service d'authentification au démarrage
-configureAuthService();
 
 export default function App() {
   const { user, isLoading, isAuthenticated } = useAuth();
