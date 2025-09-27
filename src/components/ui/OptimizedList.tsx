@@ -3,7 +3,14 @@ import React, { memo, useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { OptimizedImage } from './OptimizedImage';
-import type { ListItem } from '@/@types';
+// import type { ListItem } from '@/@types';
+
+interface ListItem {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+}
 
 interface OptimizedListProps {
   data: ListItem[];

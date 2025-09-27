@@ -1,16 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
+import { AuthProvider } from '@/features/auth/AuthProvider';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { LoginForm } from '@/features/auth/components/LoginForm';
+import { AuthScreen } from '@/features/auth/screens/AuthScreen';
 import { MainApp } from '@/features/main/screens/MainApp';
 
-
-export default function App() {
+function AppContent() {
+  console.log('AppContent rendered')
   const { user, isLoading, isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    checkAuthState();
-  }, []);
 
   if (isLoading) {
     return (
@@ -22,7 +19,16 @@ export default function App() {
 
   return (
     <View style={{ flex: 1 }}>
-      {user ? <MainApp /> : <LoginForm />}
+      {isAuthenticated && user ? <MainApp /> : <AuthScreen />}
     </View>
+  );
+}
+
+export default function App() {
+  console.log('App component rendered')
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

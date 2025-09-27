@@ -8,13 +8,6 @@ export interface LoginCredentials {
   password: string
 }
 
-export interface RegisterCredentials {
-  email: string
-  password: string
-  firstName: string
-  lastName: string
-  phone?: string
-}
 
 export interface AuthState {
   user: AuthUser | null

@@ -8,11 +8,10 @@ import {
 import { useAuth } from '../hooks/useAuth'
 import type { LoginCredentials } from '../types/auth.types'
 import { styles } from './LoginForm.styles'
-import { 
-  EmailInput, 
-  PasswordInput, 
-  LoginButton, 
-  RegisterSection, 
+import {
+  EmailInput,
+  PasswordInput,
+  LoginButton,
   ErrorDisplay,
   ForgotPasswordLink,
   LoginHeader,
@@ -21,13 +20,11 @@ import {
 interface LoginFormProps {
   onLoginSuccess?: () => void
   onForgotPassword?: (email: string) => void
-  onNavigateToRegister?: () => void
 }
 
 export const LoginForm =  ({
   onLoginSuccess,
   onForgotPassword,
-  onNavigateToRegister,
 }: LoginFormProps) => {
   const [formData, setFormData] = useState<LoginCredentials>({
     email: '',
@@ -117,11 +114,6 @@ export const LoginForm =  ({
         <LoginButton
           onPress={handleSubmit}
           isLoading={isLoading}
-        />
-
-        <RegisterSection
-          onNavigateToRegister={onNavigateToRegister ?? (() => {})}
-          disabled={isLoading}
         />
       </View>
     </KeyboardAvoidingView>

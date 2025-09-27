@@ -1,71 +1,17 @@
-import { useEffect } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { useCallback } from 'react'
 import { AuthService } from '../services/auth.service'
 import { useAuthStore } from '../store/useAuthStore'
-import type { LoginCredentials, RegisterCredentials } from '../types/auth.types'
+import type { LoginCredentials } from '../types/auth.types'
 
 export const useAuth = () => {
-  const {
-    user,
-    isLoading,
-    isAuthenticated,
-    error,
-    setUser,
-    setLoading,
-    setError,
-    clearAuth,
-  } = useAuthStore()
-
-  // Initialisation - Écoute des changements d'auth
-  useEffect(() => {
-    let mounted = true
-
-    // Récupérer la session initiale
-    const getInitialSession = async () => {
-      try {
-        setLoading(true)
-        const session = await AuthService.getCurrentSession()
-        
-        if (session?.user && mounted) {
-          const profile = await AuthService.getUserProfile(session.user.id)
-          if (profile) {
-            setUser(profile)
-          }
-        }
-      } catch (error) {
-        console.error('Error getting initial session:', error)
-        if (mounted) setError('Erreur lors de la récupération de la session')
-      } finally {
-        if (mounted) setLoading(false)
-      }
-    }
-
-    getInitialSession()
-
-    // Écouter les changements d'auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return
-
-        if (event === 'SIGNED_IN' && session?.user) {
-          try {
-            const profile = await AuthService.getUserProfile(session.user.id)
-            if (profile) setUser(profile)
-          } catch (error) {
-            console.error('Error fetching user profile:', error)
-            setError('Erreur lors de la récupération du profil')
-          }
-        } else if (event === 'SIGNED_OUT') {
-          clearAuth()
-        }
-      }
-    )
-
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
-  }, [])
+  // Use selectors to get stable references
+  const user = useAuthStore((state) => state.user)
+  const isLoading = useAuthStore((state) => state.isLoading)
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const error = useAuthStore((state) => state.error)
+  const setLoading = useAuthStore((state) => state.setLoading)
+  const setError = useAuthStore((state) => state.setError)
+  const clearAuth = useAuthStore((state) => state.clearAuth)
   // Fin initialisation
   // Vérifier l'état d'authentification
   const checkAuthState = async () => {
@@ -91,19 +37,6 @@ export const useAuth = () => {
     }
   }
 
-  const signUp = async (credentials: RegisterCredentials) => {
-    try {
-      setLoading(true)
-      setError(null)
-      await AuthService.signUp(credentials)
-      // Gérer la confirmation email si nécessaire
-    } catch (error: any) {
-      setError(error.message || 'Erreur lors de l\'inscription')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const signOut = async () => {
     try {
@@ -142,7 +75,6 @@ export const useAuth = () => {
 
     // Actions
     signIn,
-    signUp,
     signOut,
     resetPassword,
     

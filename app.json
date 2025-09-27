@@ -4,7 +4,7 @@
     "slug": "ckm66",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.ico",
+    "icon": "./src/assets/icon.jpg",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "jsEngine": "hermes",
@@ -14,7 +14,7 @@
       "web"
     ],
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./src/assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -24,7 +24,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.jpg",
+        "foregroundImage": "./src/assets/adaptive-icon.jpg",
         "backgroundColor": "#ffffff"
       },
       "package": "com.ckm66.myapp"

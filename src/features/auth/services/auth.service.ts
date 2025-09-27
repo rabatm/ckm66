@@ -1,5 +1,5 @@
 import { supabase } from '../../../lib/supabase'
-import type { LoginCredentials, RegisterCredentials, AuthUser } from '../types/auth.types'
+import type { LoginCredentials, AuthUser } from '../types/auth.types'
 
 export class AuthService {
   // Connexion
@@ -13,23 +13,6 @@ export class AuthService {
     return data
   }
 
-  // Inscription
-  static async signUp({ email, password, firstName, lastName, phone }: RegisterCredentials) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          phone: phone || null,
-        },
-      },
-    })
-    
-    if (error) throw error
-    return data
-  }
 
   // Déconnexion
   static async signOut() {
@@ -46,17 +29,61 @@ export class AuthService {
 
   // Récupérer le profil utilisateur depuis ta table profiles
   static async getUserProfile(userId: string): Promise<AuthUser | null> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        // Si le profil n'existe pas, ce n'est pas forcément une erreur
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found for user:', userId)
+          return null
+        }
+        // Permission denied or other errors
+        if (error.code === '42501') {
+          console.log('Permission denied accessing profiles table')
+          return null
+        }
+        console.error('Error fetching user profile:', error)
+        return null // Don't throw, return null instead
+      }
+
+      return data
+    } catch (error) {
+      console.error('Unexpected error fetching user profile:', error)
+      return null
+    }
+  }
+
+  // Créer un profil utilisateur après inscription
+  static async createUserProfile(userId: string, userData: {
+    email: string
+    firstName: string
+    lastName: string
+    phone?: string
+  }): Promise<AuthUser> {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('id', userId)
+      .insert({
+        id: userId,
+        email: userData.email,
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        phone: userData.phone || null,
+        role: 'member',
+        is_active: true
+      })
+      .select()
       .single()
-    
+
     if (error) {
-      console.error('Error fetching user profile:', error)
+      console.error('Error creating user profile:', error)
       throw error
     }
-    
+
     return data
   }
 

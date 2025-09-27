@@ -8,13 +8,11 @@ module.exports = {
   ],
   setupFilesAfterEnv: [
     '@testing-library/jest-native/extend-expect',
-    '<rootDir>/src/__tests__/setup.ts'
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
     '/android/',
     '/ios/',
-    '<rootDir>/src/__tests__/setup.ts'
   ],
   moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -25,7 +23,6 @@ module.exports = {
     '!src/**/__tests__/**',
     '!src/**/__mocks__/**',
     '!src/**/index.ts',
-    '!src/__tests__/setup.ts',
   ],
   coverageThreshold: {
     global: {
