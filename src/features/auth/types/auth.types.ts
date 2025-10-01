@@ -8,7 +8,6 @@ export interface LoginCredentials {
   password: string
 }
 
-
 export interface AuthState {
   user: AuthUser | null
   isLoading: boolean

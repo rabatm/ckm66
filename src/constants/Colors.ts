@@ -1,6 +1,6 @@
 export const Colors = {
   // Primary colors (Krav Maga theme)
-  primary: '#DC2626',      // Rouge Krav Maga
+  primary: '#DC2626', // Rouge Krav Maga
   primaryDark: '#B91C1C',
   primaryLight: '#FECACA',
   onPrimary: '#FFFFFF',

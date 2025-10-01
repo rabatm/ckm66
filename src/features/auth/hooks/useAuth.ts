@@ -15,13 +15,13 @@ export const useAuth = () => {
   // Fin initialisation
   // Vérifier l'état d'authentification
   const checkAuthState = async () => {
-  try {
-    const session = await AuthService.getCurrentSession()
-    return !!session?.user
-  } catch {
-    return false
+    try {
+      const session = await AuthService.getCurrentSession()
+      return !!session?.user
+    } catch {
+      return false
+    }
   }
-}
   // Actions
   const signIn = async (credentials: LoginCredentials) => {
     try {
@@ -36,7 +36,6 @@ export const useAuth = () => {
       setLoading(false)
     }
   }
-
 
   const signOut = async () => {
     try {
@@ -69,7 +68,7 @@ export const useAuth = () => {
     isLoading,
     isAuthenticated,
     error,
-    
+
     // Méthodes
     checkAuthState,
 
@@ -77,7 +76,7 @@ export const useAuth = () => {
     signIn,
     signOut,
     resetPassword,
-    
+
     // Utils
     clearError: () => setError(null),
   }

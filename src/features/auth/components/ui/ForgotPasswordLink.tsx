@@ -8,13 +8,7 @@ interface ForgotPasswordLinkProps {
 }
 
 export const ForgotPasswordLink: React.FC<ForgotPasswordLinkProps> = ({ onPress, disabled }) => (
-  <TouchableOpacity
-    style={styles.forgotPasswordLink}
-    onPress={onPress}
-    disabled={disabled}
-  >
-    <Text style={styles.forgotPasswordText}>
-      Mot de passe oublié ?
-    </Text>
+  <TouchableOpacity style={styles.forgotPasswordLink} onPress={onPress} disabled={disabled}>
+    <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
   </TouchableOpacity>
 )

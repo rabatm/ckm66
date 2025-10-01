@@ -13,8 +13,6 @@ export const LoginButton: React.FC<LoginButtonProps> = ({ onPress, isLoading }) 
     onPress={onPress}
     disabled={isLoading}
   >
-    <Text style={styles.loginButtonText}>
-      {isLoading ? 'Connexion...' : 'Se connecter'}
-    </Text>
+    <Text style={styles.loginButtonText}>{isLoading ? 'Connexion...' : 'Se connecter'}</Text>
   </TouchableOpacity>
 )

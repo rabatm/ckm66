@@ -8,11 +8,10 @@ export class AuthService {
       email,
       password,
     })
-    
+
     if (error) throw error
     return data
   }
-
 
   // Déconnexion
   static async signOut() {
@@ -22,7 +21,10 @@ export class AuthService {
 
   // Récupérer la session courante
   static async getCurrentSession() {
-    const { data: { session }, error } = await supabase.auth.getSession()
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession()
     if (error) throw error
     return session
   }
@@ -30,11 +32,7 @@ export class AuthService {
   // Récupérer le profil utilisateur depuis ta table profiles
   static async getUserProfile(userId: string): Promise<AuthUser | null> {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
 
       if (error) {
         // Si le profil n'existe pas, ce n'est pas forcément une erreur
@@ -59,12 +57,15 @@ export class AuthService {
   }
 
   // Créer un profil utilisateur après inscription
-  static async createUserProfile(userId: string, userData: {
-    email: string
-    firstName: string
-    lastName: string
-    phone?: string
-  }): Promise<AuthUser> {
+  static async createUserProfile(
+    userId: string,
+    userData: {
+      email: string
+      firstName: string
+      lastName: string
+      phone?: string
+    }
+  ): Promise<AuthUser> {
     const { data, error } = await supabase
       .from('profiles')
       .insert({
@@ -74,7 +75,7 @@ export class AuthService {
         last_name: userData.lastName,
         phone: userData.phone || null,
         role: 'member',
-        is_active: true
+        is_active: true,
       })
       .select()
       .single()
@@ -95,7 +96,7 @@ export class AuthService {
       .eq('id', userId)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -105,7 +106,7 @@ export class AuthService {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: 'com.kravmaga://reset-password',
     })
-    
+
     if (error) throw error
   }
 
@@ -116,7 +117,7 @@ export class AuthService {
       .select('is_active')
       .eq('id', userId)
       .single()
-    
+
     if (error) throw error
     return data?.is_active ?? false
   }

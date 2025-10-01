@@ -11,12 +11,12 @@ interface PasswordInputProps {
   disabled: boolean
 }
 
-export const PasswordInput= ({
+export const PasswordInput = ({
   value,
   onChangeText,
   showPassword,
   onTogglePassword,
-  disabled
+  disabled,
 }: PasswordInputProps) => (
   <View style={styles.inputContainer}>
     <Text style={styles.label}>Mot de passe</Text>
@@ -32,14 +32,8 @@ export const PasswordInput= ({
         autoCorrect={false}
         editable={!disabled}
       />
-      <TouchableOpacity
-        style={styles.eyeButton}
-        onPress={onTogglePassword}
-        disabled={disabled}
-      >
-        <Text style={styles.eyeText}>
-          {showPassword ? '👁️' : '🙈'}
-        </Text>
+      <TouchableOpacity style={styles.eyeButton} onPress={onTogglePassword} disabled={disabled}>
+        <Text style={styles.eyeText}>{showPassword ? '👁️' : '🙈'}</Text>
       </TouchableOpacity>
     </View>
   </View>

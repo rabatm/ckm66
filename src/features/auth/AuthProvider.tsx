@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 role: 'member',
                 is_active: true,
                 created_at: session.user.created_at,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
               }
               setUser(basicUser as any)
             }
@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               role: 'member',
               is_active: true,
               created_at: session.user.created_at,
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
             }
             setUser(basicUser as any)
           }

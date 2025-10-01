@@ -1,13 +1,13 @@
 // src/components/ui/OptimizedImage.tsx
-import React from 'react';
-import { Image, ImageProps } from 'expo-image';
+import React from 'react'
+import { Image, ImageProps } from 'expo-image'
 // import { ImageService } from '@/services/imageService';
 
 interface OptimizedImageProps extends Omit<ImageProps, 'source'> {
-  uri: string;
-  width?: number;
-  height?: number;
-  priority?: 'low' | 'normal' | 'high';
+  uri: string
+  width?: number
+  height?: number
+  priority?: 'low' | 'normal' | 'high'
 }
 
 export function OptimizedImage({
@@ -20,7 +20,7 @@ export function OptimizedImage({
   cachePolicy,
   ...props
 }: OptimizedImageProps) {
-  const optimizedUri = uri; // ImageService.optimizeUrl(uri, width, height);
+  const optimizedUri = uri // ImageService.optimizeUrl(uri, width, height);
 
   return (
     <Image
@@ -33,5 +33,5 @@ export function OptimizedImage({
       transition={200}
       {...props}
     />
-  );
+  )
 }

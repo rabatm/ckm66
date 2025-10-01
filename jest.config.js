@@ -6,14 +6,8 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(?:.pnpm/)?(expo|@expo|@expo-google-fonts|@react-navigation|@react-native|react-native|expo-router|@unimodules|react-native-svg|@shopify/flash-list|zustand|@tanstack))',
   ],
-  setupFilesAfterEnv: [
-    '@testing-library/jest-native/extend-expect',
-  ],
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/android/',
-    '/ios/',
-  ],
+  setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
+  testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/'],
   moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
@@ -32,4 +26,4 @@ module.exports = {
       statements: 80,
     },
   },
-};
+}

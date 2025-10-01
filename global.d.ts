@@ -4,29 +4,29 @@
 // Extend React Native components with className prop
 declare module 'react-native' {
   interface ViewProps {
-    className?: string;
+    className?: string
   }
 
   interface TextProps {
-    className?: string;
+    className?: string
   }
 
   interface PressableProps {
-    className?: string;
+    className?: string
   }
 
   interface ImageProps {
-    className?: string;
+    className?: string
   }
 
   interface ScrollViewProps {
-    className?: string;
+    className?: string
   }
 
   interface SafeAreaViewProps {
-    className?: string;
+    className?: string
   }
 }
 
 // Make sure this file is treated as a module
-export {};
+export {}
