@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, StyleSheet } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { globalStyles, colors } from '@/theme'
 
 // Mock course data - will be replaced with real data from Supabase
 const MOCK_COURSES = [
@@ -116,14 +118,14 @@ export const ScheduleScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+    <View style={globalStyles.container}>
+      <ScrollView style={globalStyles.scrollView}>
         {/* My Registrations */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mes inscriptions</Text>
+        <View style={globalStyles.section}>
+          <Text style={globalStyles.sectionTitle}>Mes inscriptions</Text>
           {courses.filter(c => c.registered).length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>Aucune inscription</Text>
+            <View style={globalStyles.emptyCard}>
+              <Text style={globalStyles.emptyText}>Aucune inscription</Text>
             </View>
           ) : (
             courses.filter(c => c.registered).map(course => (
@@ -140,8 +142,8 @@ export const ScheduleScreen = () => {
         </View>
 
         {/* Available Courses */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Cours disponibles</Text>
+        <View style={globalStyles.section}>
+          <Text style={globalStyles.sectionTitle}>Cours disponibles</Text>
           {courses.filter(c => !c.registered).map(course => (
             <CourseCard
               key={course.id}
@@ -184,17 +186,26 @@ function CourseCard({
   const spotsColor = course.availableSpots === 0 ? '#DC2626' : course.availableSpots < 5 ? '#F59E0B' : '#10B981'
 
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
+    <View style={globalStyles.card}>
+      <View style={globalStyles.cardHeader}>
         <Text style={styles.courseTitle}>{course.title}</Text>
         <View style={[styles.dayBadge, { backgroundColor: actionColor + '20' }]}>
           <Text style={[styles.dayText, { color: actionColor }]}>{course.day}</Text>
         </View>
       </View>
 
-      <Text style={styles.courseTime}>⏰ {course.time}</Text>
-      <Text style={styles.courseDetail}>👨‍🏫 {course.instructor}</Text>
-      <Text style={styles.courseDetail}>📍 {course.location}</Text>
+      <View style={styles.courseDetailRow}>
+        <Ionicons name="time-outline" size={16} color="#4B5563" />
+        <Text style={styles.courseTime}>{course.time}</Text>
+      </View>
+      <View style={styles.courseDetailRow}>
+        <Ionicons name="person-outline" size={16} color="#6B7280" />
+        <Text style={styles.courseDetail}>{course.instructor}</Text>
+      </View>
+      <View style={styles.courseDetailRow}>
+        <Ionicons name="location-outline" size={16} color="#6B7280" />
+        <Text style={styles.courseDetail}>{course.location}</Text>
+      </View>
 
       <View style={styles.cardFooter}>
         <Text style={[styles.spotsText, { color: spotsColor }]}>
@@ -206,7 +217,10 @@ function CourseCard({
             onPress={onViewAttendance}
             activeOpacity={0.7}
           >
-            <Text style={styles.attendanceButtonText}>👥 Liste</Text>
+            <View style={styles.attendanceButtonContent}>
+              <Ionicons name="people-outline" size={16} color="#374151" />
+              <Text style={styles.attendanceButtonText}>Liste</Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -238,10 +252,10 @@ function AttendanceModal({ visible, course, onClose }: { visible: boolean; cours
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Liste des participants</Text>
+      <View style={globalStyles.modalOverlay}>
+        <View style={globalStyles.modalContainer}>
+          <View style={globalStyles.modalHeader}>
+            <Text style={globalStyles.modalTitle}>Liste des participants</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton} activeOpacity={0.7}>
               <Text style={styles.closeButtonText}>×</Text>
             </TouchableOpacity>
@@ -283,53 +297,14 @@ function AttendanceModal({ visible, course, onClose }: { visible: boolean; cours
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  section: {
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 16,
-  },
-  emptyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 32,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
+  // Les styles container, scrollView, section, sectionTitle, emptyCard, emptyText
+  // card, cardHeader, et courseTitle utilisent maintenant globalStyles
+  // Voir globalStyles.container, globalStyles.card, etc.
+  
   courseTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1F2937',
+    color: colors.text.primary,
     flex: 1,
   },
   dayBadge: {
@@ -341,15 +316,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  courseDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
   courseTime: {
     fontSize: 14,
-    color: '#4B5563',
-    marginBottom: 4,
+    color: colors.text.secondary,
   },
   courseDetail: {
     fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 4,
+    color: colors.text.secondary,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -358,7 +337,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: colors.border.light,
   },
   spotsText: {
     fontSize: 14,
@@ -371,12 +350,19 @@ const styles = StyleSheet.create({
   attendanceButton: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background.tertiary,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+  },
+  attendanceButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   attendanceButtonText: {
     fontSize: 14,
-    color: '#374151',
+    color: colors.text.primary,
     fontWeight: '500',
   },
   actionButton: {
@@ -398,7 +384,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -413,7 +399,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1F2937',
+    color: colors.text.primary,
   },
   closeButton: {
     width: 32,
@@ -423,31 +409,33 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 32,
-    color: '#6B7280',
+    color: colors.text.secondary,
     lineHeight: 32,
   },
   modalCourseInfo: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background.tertiary,
     padding: 16,
     borderRadius: 12,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border.light,
   },
   modalCourseTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.text.primary,
     marginBottom: 4,
   },
   modalCourseDetail: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.text.secondary,
   },
   participantsList: {
     maxHeight: 400,
   },
   participantsCount: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.text.secondary,
     marginBottom: 12,
   },
   participantItem: {
@@ -455,13 +443,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.border.light,
   },
   participantAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.primary[500],
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -469,7 +457,7 @@ const styles = StyleSheet.create({
   participantAvatarText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   participantInfo: {
     flex: 1,
@@ -477,22 +465,22 @@ const styles = StyleSheet.create({
   participantName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.text.primary,
     marginBottom: 2,
   },
   participantEmail: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.text.secondary,
   },
   modalCloseButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.primary[500],
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 20,
   },
   modalCloseButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     fontWeight: '600',
   },

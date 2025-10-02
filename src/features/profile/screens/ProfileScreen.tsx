@@ -1,14 +1,35 @@
 import React, { useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput, StyleSheet } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native'
+import * as ImagePicker from 'expo-image-picker'
+import { Ionicons } from '@expo/vector-icons'
+import { colors, spacing, typography } from '@/theme'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useBadges } from '../hooks/useBadges'
+import { useSubscription } from '../hooks/useSubscription'
+import { uploadProfilePicture, getProfilePictureUrl } from '../services/profile.service'
+import {
+  ProfileHeader,
+  LevelProgressCard,
+  BadgeStatsCard,
+  SubscriptionCard,
+  EditProfileModal
+} from '../components'
 
 interface ProfileScreenProps {
   onBack?: () => void
 }
 
 export function ProfileScreen({ onBack }: ProfileScreenProps) {
-  const { user, signOut } = useAuth()
+  const { user, signOut, updateUser } = useAuth()
+  const { userProgress, isLoading, error, refetch: refetchBadges } = useBadges()
+  const { subscriptionInfo, isLoading: isLoadingSubscription, refetch: refetchSubscription } = useSubscription()
   const [showEditModal, setShowEditModal] = useState(false)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+
+  const handleRefresh = () => {
+    refetchBadges()
+    refetchSubscription()
+  }
 
   const handleLogout = async () => {
     Alert.alert(
@@ -31,34 +52,126 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
     )
   }
 
+  const handleChangePhoto = async () => {
+    if (!user?.id) return
+
+    Alert.alert(
+      'Changer la photo',
+      'Choisissez une source',
+      [
+        {
+          text: 'Appareil photo',
+          onPress: () => pickImage('camera'),
+        },
+        {
+          text: 'Bibliothèque',
+          onPress: () => pickImage('library'),
+        },
+        {
+          text: 'Annuler',
+          style: 'cancel',
+        },
+      ],
+      { cancelable: true }
+    )
+  }
+
+  const pickImage = async (source: 'camera' | 'library') => {
+    if (!user?.id) return
+
+    try {
+      const permissionResult = source === 'camera'
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync()
+
+      if (permissionResult.status !== 'granted') {
+        Alert.alert(
+          'Permission refusée',
+          `Nous avons besoin d'accéder à ${source === 'camera' ? 'votre appareil photo' : 'vos photos'}`
+        )
+        return
+      }
+
+      const result = source === 'camera'
+        ? await ImagePicker.launchCameraAsync({
+            mediaTypes: 'images',
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: 'images',
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+          })
+
+      if (!result.canceled && result.assets[0]) {
+        setIsUploadingPhoto(true)
+        const newPhotoUrl = await uploadProfilePicture(user.id, result.assets[0].uri)
+        updateUser({ profile_picture_url: newPhotoUrl })
+        handleRefresh()
+        Alert.alert('Succès', 'Photo de profil mise à jour')
+      }
+    } catch (error) {
+      console.error('Error changing photo:', error)
+      Alert.alert('Erreur', 'Impossible de mettre à jour la photo')
+    } finally {
+      setIsUploadingPhoto(false)
+    }
+  }
+
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* User Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user?.first_name?.charAt(0).toUpperCase() || '?'}
-              {user?.last_name?.charAt(0).toUpperCase() || '?'}
-            </Text>
-          </View>
-          <Text style={styles.userName}>
-            {user?.first_name} {user?.last_name}
-          </Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
-        </View>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {/* Profile Header */}
+        <ProfileHeader
+          firstName={user?.first_name}
+          lastName={user?.last_name}
+          email={user?.email}
+          profilePictureUrl={getProfilePictureUrl(user?.profile_picture_url)}
+          joinDate={user?.join_date}
+          isUploadingPhoto={isUploadingPhoto}
+          onChangePhoto={handleChangePhoto}
+        />
 
-        {/* User Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informations</Text>
-          <View style={styles.infoCard}>
-            <InfoRow label="Email" value={user?.email || 'Non renseigné'} />
-            <View style={styles.divider} />
-            <InfoRow label="Téléphone" value={user?.phone || 'Non renseigné'} />
-            <View style={styles.divider} />
-            <InfoRow label="Rôle" value={getRoleLabel(user?.role || 'member')} />
+        {/* Loading / Error / Content */}
+        {isLoading ? (
+          <View style={styles.loadingSection}>
+            <ActivityIndicator size="small" color={colors.primary[500]} />
           </View>
-        </View>
+        ) : error ? (
+          <View style={styles.errorSection}>
+            <Text style={styles.errorText}>Impossible de charger les données</Text>
+          </View>
+        ) : userProgress ? (
+          <>
+            {/* Level Progress */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Progression</Text>
+              <LevelProgressCard userProgress={userProgress} />
+            </View>
+
+            {/* Badge Stats */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Badges</Text>
+              <BadgeStatsCard
+                unlockedBadges={userProgress.unlocked_badges}
+                totalBadges={userProgress.total_badges}
+                badgesPercentage={userProgress.badges_percentage}
+              />
+            </View>
+
+            {/* Subscription */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Abonnement</Text>
+              <SubscriptionCard
+                subscriptionInfo={subscriptionInfo}
+                isLoading={isLoadingSubscription}
+              />
+            </View>
+          </>
+        ) : null}
 
         {/* Actions */}
         <View style={styles.section}>
@@ -67,7 +180,8 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
             onPress={() => setShowEditModal(true)}
             activeOpacity={0.7}
           >
-            <Text style={styles.actionButtonText}>✏️ Modifier mes informations</Text>
+            <Ionicons name="pencil" size={18} color={colors.text.primary} />
+            <Text style={styles.actionButtonText}>Modifier mes informations</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -75,13 +189,14 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
             onPress={handleLogout}
             activeOpacity={0.7}
           >
+            <Ionicons name="log-out-outline" size={18} color={colors.error} />
             <Text style={[styles.actionButtonText, styles.logoutButtonText]}>
-              🚪 Se déconnecter
+              Se déconnecter
             </Text>
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Edit Profile Modal */}
@@ -89,293 +204,68 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
         visible={showEditModal}
         onClose={() => setShowEditModal(false)}
         user={user}
+        onSaveSuccess={handleRefresh}
+        updateUser={updateUser}
       />
     </View>
   )
 }
 
-// Helper Components
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
-    </View>
-  )
-}
-
-function getRoleLabel(role: string): string {
-  const roles: { [key: string]: string } = {
-    admin: 'Administrateur',
-    instructor: 'Instructeur',
-    member: 'Membre',
-  }
-  return roles[role] || role
-}
-
-// Edit Profile Modal
-function EditProfileModal({
-  visible,
-  onClose,
-  user
-}: {
-  visible: boolean
-  onClose: () => void
-  user: any
-}) {
-  const [firstName, setFirstName] = useState(user?.first_name || '')
-  const [lastName, setLastName] = useState(user?.last_name || '')
-  const [phone, setPhone] = useState(user?.phone || '')
-
-  const handleSave = () => {
-    Alert.alert('Succès', 'Profil mis à jour (fonctionnalité en développement)')
-    onClose()
-  }
-
-  return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Modifier mon profil</Text>
-            <TouchableOpacity
-              onPress={onClose}
-              style={styles.closeButton}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.closeButtonText}>×</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Prénom</Text>
-            <TextInput
-              value={firstName}
-              onChangeText={setFirstName}
-              placeholder="Prénom"
-              style={styles.input}
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Nom</Text>
-            <TextInput
-              value={lastName}
-              onChangeText={setLastName}
-              placeholder="Nom"
-              style={styles.input}
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Téléphone</Text>
-            <TextInput
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="06 12 34 56 78"
-              keyboardType="phone-pad"
-              style={styles.input}
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-
-          <View style={styles.modalButtons}>
-            <TouchableOpacity
-              style={styles.modalButtonSecondary}
-              onPress={onClose}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.modalButtonSecondaryText}>Annuler</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalButtonPrimary}
-              onPress={handleSave}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.modalButtonPrimaryText}>Enregistrer</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  )
-}
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background.primary,
   },
   scrollView: {
     flex: 1,
   },
-  profileCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 32,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#3B82F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: '#6B7280',
+  scrollContent: {
+    paddingBottom: spacing['4xl'],
   },
   section: {
-    padding: 20,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 12,
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+    color: colors.primary[500],
+    marginBottom: spacing.md,
   },
-  infoCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  loadingSection: {
+    padding: spacing.xl,
     alignItems: 'center',
-    paddingVertical: 12,
   },
-  infoLabel: {
-    fontSize: 14,
-    color: '#6B7280',
+  errorSection: {
+    padding: spacing.xl,
+    alignItems: 'center',
   },
-  infoValue: {
-    fontSize: 14,
-    color: '#1F2937',
-    fontWeight: '600',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
+  errorText: {
+    color: colors.error,
+    fontSize: typography.sizes.sm,
   },
   actionButton: {
-    backgroundColor: '#3B82F6',
-    padding: 16,
+    backgroundColor: colors.background.secondary,
+    padding: spacing.md,
     borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  actionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    backgroundColor: '#FEE2E2',
-  },
-  logoutButtonText: {
-    color: '#DC2626',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    minHeight: 400,
-  },
-  modalHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1F2937',
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border.dark,
   },
-  closeButtonText: {
-    fontSize: 32,
-    color: '#6B7280',
-    lineHeight: 32,
+  actionButtonText: {
+    color: colors.text.primary,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
   },
-  inputGroup: {
-    marginBottom: 20,
+  logoutButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: colors.error,
   },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  modalButtonPrimary: {
-    flex: 1,
-    backgroundColor: '#3B82F6',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  modalButtonPrimaryText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalButtonSecondary: {
-    flex: 1,
-    backgroundColor: '#F3F4F6',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  modalButtonSecondaryText: {
-    color: '#374151',
-    fontSize: 16,
-    fontWeight: '600',
+  logoutButtonText: {
+    color: colors.error,
   },
 })

@@ -3,17 +3,16 @@ import { View, StyleSheet } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { LoginForm } from '../components/LoginForm'
 import { useAuth } from '../hooks/useAuth'
-import { useTheme } from '@/ui/themes'
+import { colors } from '@/theme'
 
 export const AuthScreen = () => {
   const { resetPassword } = useAuth()
-  const { theme } = useTheme()
 
   const handleForgotPassword = async (email: string) => {
     try {
       await resetPassword(email)
       // You might want to show a success message here
-    } catch (error) {
+    } catch {
       // Error is already handled in the hook
     }
   }
@@ -25,7 +24,7 @@ export const AuthScreen = () => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#FF8F4D', '#FF6B1A', '#E55A0F']}
+        colors={[colors.primary[500], colors.primary[600]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
@@ -42,7 +41,7 @@ export const AuthScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background.primary,
   },
   gradient: {
     position: 'absolute',
@@ -53,7 +52,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(248, 250, 252, 0.92)',
+    backgroundColor: 'rgba(26, 32, 44, 0.85)',
   },
   content: {
     flex: 1,

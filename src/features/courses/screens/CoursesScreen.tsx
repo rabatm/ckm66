@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { globalStyles, colors } from '@/theme'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 
@@ -70,11 +72,7 @@ export function CoursesScreen() {
 
       {/* Content */}
       <ScrollView className="flex-1 px-4 py-4">
-        {activeTab === 'schedule' ? (
-          <ScheduleTab />
-        ) : (
-          <ReservationsTab />
-        )}
+        {activeTab === 'schedule' ? <ScheduleTab /> : <ReservationsTab />}
       </ScrollView>
     </View>
   )
@@ -88,9 +86,7 @@ function ScheduleTab() {
         <Text className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
           Lundi 18h00 - 19h30
         </Text>
-        <Text className="text-gray-600 dark:text-gray-400 mb-2">
-          Krav Maga - Niveau Débutant
-        </Text>
+        <Text className="text-gray-600 dark:text-gray-400 mb-2">Krav Maga - Niveau Débutant</Text>
         <Text className="text-sm text-gray-500 dark:text-gray-500 mb-3">
           Instructeur: Jean Dupont • Gymnase Municipal
         </Text>
@@ -98,7 +94,11 @@ function ScheduleTab() {
           <Text className="text-sm text-green-600 dark:text-green-400 font-medium">
             12 places disponibles
           </Text>
-          <Button variant="primary" size="sm" onPress={() => Alert.alert('Réservation', 'Fonctionnalité en cours de développement')}>
+          <Button
+            variant="primary"
+            size="sm"
+            onPress={() => Alert.alert('Réservation', 'Fonctionnalité en cours de développement')}
+          >
             Réserver
           </Button>
         </View>
@@ -118,7 +118,11 @@ function ScheduleTab() {
           <Text className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
             2 places restantes
           </Text>
-          <Button variant="primary" size="sm" onPress={() => Alert.alert('Réservation', 'Fonctionnalité en cours de développement')}>
+          <Button
+            variant="primary"
+            size="sm"
+            onPress={() => Alert.alert('Réservation', 'Fonctionnalité en cours de développement')}
+          >
             Dernière place !
           </Button>
         </View>
@@ -128,25 +132,28 @@ function ScheduleTab() {
         <Text className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
           Vendredi 18h30 - 20h00
         </Text>
-        <Text className="text-gray-600 dark:text-gray-400 mb-2">
-          Krav Maga - Niveau Avancé
-        </Text>
+        <Text className="text-gray-600 dark:text-gray-400 mb-2">Krav Maga - Niveau Avancé</Text>
         <Text className="text-sm text-gray-500 dark:text-gray-500 mb-3">
           Instructeur: Paul Durand • Gymnase Municipal
         </Text>
         <View className="flex-row justify-between items-center">
-          <Text className="text-sm text-red-600 dark:text-red-400 font-medium">
-            Complet
-          </Text>
-          <Button variant="outline" size="sm" onPress={() => Alert.alert('Liste d\'attente', 'Fonctionnalité en cours de développement')}>
+          <Text className="text-sm text-red-600 dark:text-red-400 font-medium">Complet</Text>
+          <Button
+            variant="outline"
+            size="sm"
+            onPress={() =>
+              Alert.alert("Liste d'attente", 'Fonctionnalité en cours de développement')
+            }
+          >
             Liste d'attente
           </Button>
         </View>
       </Card>
 
-      <View className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <Text className="text-sm text-blue-800 dark:text-blue-200 text-center">
-          💡 Les données de cours seront chargées depuis la base de données une fois les permissions configurées
+      <View className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex-row items-center justify-center gap-2">
+        <Ionicons name="information-circle" size={16} color="#1E40AF" />
+        <Text className="text-sm text-blue-800 dark:text-blue-200">
+          Les données de cours seront chargées depuis la base de données
         </Text>
       </View>
     </View>
@@ -172,10 +179,12 @@ function ReservationsTab() {
           </View>
         </View>
         <View className="flex-row justify-between items-center">
-          <Text className="text-xs text-gray-500 dark:text-gray-400">
-            Réservé le 28 sept. 2024
-          </Text>
-          <Button variant="outline" size="sm" onPress={() => Alert.alert('Annulation', 'Fonctionnalité en cours de développement')}>
+          <Text className="text-xs text-gray-500 dark:text-gray-400">Réservé le 28 sept. 2024</Text>
+          <Button
+            variant="outline"
+            size="sm"
+            onPress={() => Alert.alert('Annulation', 'Fonctionnalité en cours de développement')}
+          >
             Annuler
           </Button>
         </View>
@@ -201,18 +210,21 @@ function ReservationsTab() {
           </Text>
         </View>
         <View className="flex-row justify-between items-center">
-          <Text className="text-xs text-gray-500 dark:text-gray-400">
-            Réservé le 30 sept. 2024
-          </Text>
-          <Button variant="outline" size="sm" onPress={() => Alert.alert('Annulation', 'Fonctionnalité en cours de développement')}>
+          <Text className="text-xs text-gray-500 dark:text-gray-400">Réservé le 30 sept. 2024</Text>
+          <Button
+            variant="outline"
+            size="sm"
+            onPress={() => Alert.alert('Annulation', 'Fonctionnalité en cours de développement')}
+          >
             Quitter la liste
           </Button>
         </View>
       </Card>
 
-      <View className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <Text className="text-sm text-blue-800 dark:text-blue-200 text-center">
-          💡 Vos réservations réelles seront affichées ici une fois connecté à la base de données
+      <View className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex-row items-center justify-center gap-2">
+        <Ionicons name="information-circle" size={16} color="#1E40AF" />
+        <Text className="text-sm text-blue-800 dark:text-blue-200">
+          Vos réservations seront affichées ici une fois connecté
         </Text>
       </View>
     </View>

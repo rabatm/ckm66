@@ -1,11 +1,18 @@
 import React, { useState } from 'react'
-import { View, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
+import {
+  View,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../hooks/useAuth'
 import type { LoginCredentials } from '../types/auth.types'
-import { Card, ErrorState } from '@/ui/components/molecules'
-import { Button, Input, Typography } from '@/ui/components/atoms'
-import { spacing } from '@/ui/tokens'
-import { useTheme } from '@/ui/themes'
+import { colors } from '@/theme'
 
 interface LoginFormProps {
   onLoginSuccess?: () => void
@@ -21,13 +28,11 @@ export const LoginForm = ({ onLoginSuccess, onForgotPassword }: LoginFormProps) 
   const [validationErrors, setValidationErrors] = useState<Partial<LoginCredentials>>({})
 
   const { signIn, isLoading, error, clearError } = useAuth()
-  const { theme } = useTheme()
 
   const handleInputChange = (field: keyof LoginCredentials, value: string) => {
     if (error) clearError()
     setFormData((prev) => ({ ...prev, [field]: value }))
 
-    // Clear field-specific validation error
     if (validationErrors[field]) {
       setValidationErrors((prev) => ({ ...prev, [field]: undefined }))
     }
@@ -41,7 +46,7 @@ export const LoginForm = ({ onLoginSuccess, onForgotPassword }: LoginFormProps) 
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(formData.email)) {
-        errors.email = 'Format d\'email invalide'
+        errors.email = "Format d'email invalide"
       }
     }
 
@@ -59,7 +64,7 @@ export const LoginForm = ({ onLoginSuccess, onForgotPassword }: LoginFormProps) 
     try {
       await signIn(formData)
       onLoginSuccess?.()
-    } catch (error) {
+    } catch {
       // Error handled in useAuth hook
     }
   }
@@ -72,146 +77,103 @@ export const LoginForm = ({ onLoginSuccess, onForgotPassword }: LoginFormProps) 
     onForgotPassword?.(formData.email)
   }
 
-  const renderPasswordIcon = () => (
-    <View style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
-      {showPassword ? (
-        // Eye slash icon (hide)
-        <>
-          <View style={{
-            width: 18,
-            height: 12,
-            borderWidth: 1,
-            borderColor: theme.colors.textSecondary,
-            borderRadius: 9,
-            position: 'relative',
-          }} />
-          <View style={{
-            width: 6,
-            height: 6,
-            backgroundColor: theme.colors.textSecondary,
-            borderRadius: 3,
-            position: 'absolute',
-          }} />
-          <View style={{
-            width: 20,
-            height: 1,
-            backgroundColor: theme.colors.textSecondary,
-            position: 'absolute',
-            transform: [{ rotate: '45deg' }],
-          }} />
-        </>
-      ) : (
-        // Eye icon (show)
-        <>
-          <View style={{
-            width: 18,
-            height: 12,
-            borderWidth: 1,
-            borderColor: theme.colors.textSecondary,
-            borderRadius: 9,
-          }} />
-          <View style={{
-            width: 6,
-            height: 6,
-            backgroundColor: theme.colors.textSecondary,
-            borderRadius: 3,
-            position: 'absolute',
-          }} />
-        </>
-      )}
-    </View>
-  )
-
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
-        {/* Header */}
         <View style={styles.header}>
-          <Typography variant="h1" style={styles.title}>
-            CKM66
-          </Typography>
-          <Typography variant="body" color="secondary" style={styles.subtitle}>
-            Krav Maga Perpignan
-          </Typography>
+          <Text style={styles.title}>CKM66</Text>
+          <Text style={styles.subtitle}>Krav Maga Perpignan</Text>
         </View>
 
-        {/* Card */}
         <View style={styles.card}>
-          <Typography variant="h3" style={styles.cardTitle}>
-            Connexion
-          </Typography>
+          <Text style={styles.cardTitle}>Connexion</Text>
 
-          {/* Global Error */}
           {error && (
             <View style={styles.errorBanner}>
-              <Typography variant="bodySmall" style={styles.errorText}>
-                {error}
-              </Typography>
+              <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
 
-          {/* Email Field */}
           <View style={styles.inputWrapper}>
-            <Input
-              label="Email"
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={[styles.input, validationErrors.email && styles.inputError]}
               value={formData.email}
               onChangeText={(value) => handleInputChange('email', value)}
               placeholder="votre.email@exemple.com"
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              disabled={isLoading}
-              {...(validationErrors.email && { error: validationErrors.email })}
+              editable={!isLoading}
+              placeholderTextColor={colors.text.disabled}
             />
+            {validationErrors.email && (
+              <Text style={styles.errorMessage}>{validationErrors.email}</Text>
+            )}
           </View>
 
-          {/* Password Field */}
           <View style={styles.inputWrapper}>
-            <Input
-              label="Mot de passe"
-              value={formData.password}
-              onChangeText={(value) => handleInputChange('password', value)}
-              placeholder="Votre mot de passe"
-              secureTextEntry={!showPassword}
-              disabled={isLoading}
-              {...(validationErrors.password && { error: validationErrors.password })}
-              icon={renderPasswordIcon()}
-              onIconPress={() => setShowPassword(!showPassword)}
-            />
+            <Text style={styles.label}>Mot de passe</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.passwordInput,
+                  validationErrors.password && styles.inputError,
+                ]}
+                value={formData.password}
+                onChangeText={(value) => handleInputChange('password', value)}
+                placeholder="Votre mot de passe"
+                secureTextEntry={!showPassword}
+                editable={!isLoading}
+                placeholderTextColor={colors.text.disabled}
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                  size={22}
+                  color={colors.text.tertiary}
+                />
+              </TouchableOpacity>
+            </View>
+            {validationErrors.password && (
+              <Text style={styles.errorMessage}>{validationErrors.password}</Text>
+            )}
           </View>
 
-          {/* Forgot Password */}
           <View style={styles.forgotPasswordContainer}>
-            <Button
-              variant="ghost"
-              size="sm"
+            <TouchableOpacity
               onPress={handleForgotPassword}
-              state={isLoading ? 'disabled' : 'default'}
+              disabled={isLoading}
+              activeOpacity={0.7}
             >
-              Mot de passe oublié ?
-            </Button>
+              <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Login Button */}
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
+          <TouchableOpacity
+            style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleSubmit}
-            state={isLoading ? 'loading' : 'default'}
+            disabled={isLoading}
+            activeOpacity={0.8}
           >
-            Se connecter
-          </Button>
+            {isLoading ? (
+              <ActivityIndicator color={colors.text.primary} />
+            ) : (
+              <Text style={styles.buttonText}>Se connecter</Text>
+            )}
+          </TouchableOpacity>
         </View>
 
-        {/* Footer */}
         <View style={styles.footer}>
-          <Typography variant="caption" color="secondary" align="center">
-            Besoin d'aide ? Contactez votre instructeur
-          </Typography>
+          <Text style={styles.footerText}>Besoin d aide ? Contactez votre instructeur</Text>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -225,30 +187,32 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: spacing[5],
+    paddingHorizontal: 24,
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing[8],
+    marginBottom: 48,
   },
   title: {
     fontSize: 48,
     fontWeight: '700',
     letterSpacing: 2,
-    color: '#FF6B1A',
-    marginBottom: spacing[2],
+    color: colors.primary[500],
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    opacity: 0.7,
+    color: colors.text.secondary,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
     borderRadius: 24,
-    padding: spacing[6],
+    padding: 24,
+    borderWidth: 1,
+    borderColor: colors.border.dark,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 8,
   },
@@ -256,32 +220,94 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: spacing[6],
-    color: '#0F172A',
+    marginBottom: 24,
+    color: colors.text.primary,
   },
   errorBanner: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FCA5A5',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: colors.error,
     borderWidth: 1,
     borderRadius: 12,
-    padding: spacing[3],
-    marginBottom: spacing[4],
+    padding: 12,
+    marginBottom: 16,
   },
   errorText: {
-    color: '#DC2626',
+    color: colors.error,
     textAlign: 'center',
+    fontSize: 14,
   },
   inputWrapper: {
-    marginBottom: spacing[4],
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.secondary,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: colors.background.tertiary,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: colors.text.primary,
+  },
+  inputError: {
+    borderColor: colors.error,
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 50,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+    padding: 4,
+  },
+  eyeIcon: {
+    fontSize: 20,
+  },
+  errorMessage: {
+    color: colors.error,
+    fontSize: 12,
+    marginTop: 4,
   },
   forgotPasswordContainer: {
     alignItems: 'flex-end',
-    marginBottom: spacing[6],
-    marginTop: -spacing[1],
+    marginBottom: 24,
+    marginTop: -4,
+  },
+  forgotPasswordText: {
+    color: colors.primary[500],
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  button: {
+    backgroundColor: colors.primary[500],
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: colors.text.primary,
+    fontSize: 16,
+    fontWeight: '600',
   },
   footer: {
     alignItems: 'center',
-    marginTop: spacing[8],
-    opacity: 0.6,
+    marginTop: 48,
+  },
+  footerText: {
+    color: colors.text.tertiary,
+    fontSize: 12,
+    textAlign: 'center',
   },
 })

@@ -301,39 +301,125 @@ export type Database = {
       }
       profiles: {
         Row: {
+          attendance_rate: number
           created_at: string | null
+          current_level: number
+          current_streak: number
           email: string
           first_name: string
           id: string
           is_active: boolean | null
+          join_date: string | null
           last_name: string
+          longest_streak: number
           phone: string | null
+          profile_picture_url: string | null
           role: string
+          total_classes: number
+          total_points: number
           updated_at: string | null
         }
         Insert: {
+          attendance_rate?: number
           created_at?: string | null
+          current_level?: number
+          current_streak?: number
           email: string
           first_name: string
           id: string
           is_active?: boolean | null
+          join_date?: string | null
           last_name: string
+          longest_streak?: number
           phone?: string | null
+          profile_picture_url?: string | null
           role?: string
+          total_classes?: number
+          total_points?: number
           updated_at?: string | null
         }
         Update: {
+          attendance_rate?: number
           created_at?: string | null
+          current_level?: number
+          current_streak?: number
           email?: string
           first_name?: string
           id?: string
           is_active?: boolean | null
+          join_date?: string | null
           last_name?: string
+          longest_streak?: number
           phone?: string | null
+          profile_picture_url?: string | null
           role?: string
+          total_classes?: number
+          total_points?: number
           updated_at?: string | null
         }
         Relationships: []
+      }
+      badges: {
+        Row: {
+          category: string
+          code: string
+          created_at: string | null
+          created_by: string | null
+          description: string
+          display_order: number
+          icon_emoji: string
+          id: string
+          is_active: boolean
+          is_system: boolean
+          name: string
+          points: number
+          requirement_rule: Json | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          display_order?: number
+          icon_emoji: string
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name: string
+          points?: number
+          requirement_rule?: Json | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          display_order?: number
+          icon_emoji?: string
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name?: string
+          points?: number
+          requirement_rule?: Json | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'badges_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
       }
       reservations: {
         Row: {
@@ -494,6 +580,58 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          awarded_by: string | null
+          badge_id: string
+          coach_message: string | null
+          created_at: string | null
+          id: string
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          awarded_by?: string | null
+          badge_id: string
+          coach_message?: string | null
+          created_at?: string | null
+          id?: string
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          awarded_by?: string | null
+          badge_id?: string
+          coach_message?: string | null
+          created_at?: string | null
+          id?: string
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'user_badges_awarded_by_fkey'
+            columns: ['awarded_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'user_badges_badge_id_fkey'
+            columns: ['badge_id']
+            isOneToOne: false
+            referencedRelation: 'badges'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'user_badges_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -502,6 +640,18 @@ export type Database = {
       update_waiting_list_positions: {
         Args: { course_id: string }
         Returns: undefined
+      }
+      check_and_unlock_badges: {
+        Args: { p_user_id: string }
+        Returns: Array<{
+          newly_unlocked_count: number
+          newly_unlocked_badges: Array<{
+            badge_id: string
+            code: string
+            name: string
+            points: number
+          }>
+        }>
       }
     }
     Enums: {

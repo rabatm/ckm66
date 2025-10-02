@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { AuthService } from '../services/auth.service'
 import { useAuthStore } from '../store/useAuthStore'
 import type { LoginCredentials } from '../types/auth.types'
+import { checkAndUnlockBadges } from '@/features/profile/services/badge.service'
 
 export const useAuth = () => {
   // Use selectors to get stable references
@@ -12,6 +13,7 @@ export const useAuth = () => {
   const setLoading = useAuthStore((state) => state.setLoading)
   const setError = useAuthStore((state) => state.setError)
   const clearAuth = useAuthStore((state) => state.clearAuth)
+  const updateUser = useAuthStore((state) => state.updateUser)
   // Fin initialisation
   // Vérifier l'état d'authentification
   const checkAuthState = async () => {
@@ -27,7 +29,18 @@ export const useAuth = () => {
     try {
       setLoading(true)
       setError(null)
-      await AuthService.signIn(credentials)
+      const result = await AuthService.signIn(credentials)
+
+      // Check and unlock badges after successful login
+      if (result?.user?.id) {
+        try {
+          await checkAndUnlockBadges(result.user.id)
+        } catch (badgeError) {
+          console.error('Error checking badges after login:', badgeError)
+          // Don't fail login if badge check fails
+        }
+      }
+
       // L'utilisateur sera mis à jour via onAuthStateChange
     } catch (error: any) {
       setError(error.message || 'Erreur de connexion')
@@ -76,6 +89,7 @@ export const useAuth = () => {
     signIn,
     signOut,
     resetPassword,
+    updateUser,
 
     // Utils
     clearError: () => setError(null),
