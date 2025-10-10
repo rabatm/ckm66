@@ -27,9 +27,9 @@ interface ProfileScreenProps {
   onBack?: () => void
 }
 
-export function ProfileScreen({ onBack }: ProfileScreenProps) {
+export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
   const { user, signOut, updateUser } = useAuth()
-  const { userProgress, isLoading, error, refetch: refetchBadges } = useBadges()
+  const { userProgress, isLoading, refetch: refetchBadges } = useBadges()
   const {
     subscriptionInfo,
     isLoading: isLoadingSubscription,
@@ -52,7 +52,8 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
         onPress: async () => {
           try {
             await signOut()
-          } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (_error) {
             Alert.alert('Erreur', 'Impossible de se déconnecter')
           }
         },
@@ -136,11 +137,11 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Profile Header */}
         <ProfileHeader
-          firstName={user?.first_name}
-          lastName={user?.last_name}
-          email={user?.email}
+          firstName={user?.first_name || ''}
+          lastName={user?.last_name || ''}
+          email={user?.email || ''}
           profilePictureUrl={getProfilePictureUrl(user?.profile_picture_url)}
-          joinDate={user?.join_date}
+          joinDate={user?.join_date || ''}
           isUploadingPhoto={isUploadingPhoto}
           onChangePhoto={handleChangePhoto}
         />
@@ -149,10 +150,6 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
         {isLoading ? (
           <View style={styles.loadingSection}>
             <ActivityIndicator size="small" color={colors.primary[500]} />
-          </View>
-        ) : error ? (
-          <View style={styles.errorSection}>
-            <Text style={styles.errorText}>Impossible de charger les données</Text>
           </View>
         ) : userProgress ? (
           <>

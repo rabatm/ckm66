@@ -56,7 +56,7 @@ export async function fetchUserBadges(userId: string): Promise<UserBadge[]> {
     throw error
   }
 
-  return (data || []) as any as UserBadge[]
+  return (data || []) as UserBadge[]
 }
 
 /**
@@ -114,13 +114,14 @@ export async function fetchBadgesWithProgress(userId: string): Promise<BadgeWith
         case 'current_streak':
           current = profile.current_streak || 0
           break
-        case 'membership_months':
+        case 'membership_months': {
           const joinDate = new Date(profile.join_date || profile.created_at || new Date())
           const monthsDiff = Math.floor(
             (new Date().getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
           )
           current = monthsDiff
           break
+        }
         default:
           current = 0
       }

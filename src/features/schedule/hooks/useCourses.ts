@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { CourseService } from '../services'
-import type { Course, CourseFilters } from '../types'
+import type { CourseFilters } from '../types'
 
 /**
  * useCourses Hook

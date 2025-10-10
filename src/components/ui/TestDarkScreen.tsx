@@ -14,6 +14,7 @@ export const TestDarkScreen = () => {
 
   const handleLogin = () => {
     setLoading(true)
+    // eslint-disable-next-line no-undef
     setTimeout(() => setLoading(false), 2000)
   }
 

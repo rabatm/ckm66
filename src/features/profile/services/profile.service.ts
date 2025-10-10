@@ -41,8 +41,8 @@ export async function updateProfile(userId: string, data: ProfileUpdateData): Pr
       email: user.email || '',
       first_name: data.first_name || '',
       last_name: data.last_name || '',
-      phone: data.phone,
-      profile_picture_url: data.profile_picture_url,
+      phone: data.phone || null,
+      profile_picture_url: data.profile_picture_url || null,
     })
 
     if (error) {
@@ -82,16 +82,9 @@ export async function uploadProfilePicture(userId: string, imageUri: string): Pr
     const fileName = `${userId}-${Date.now()}.${fileExtension}`
     const filePath = `${userId}/${fileName}`
 
-    // Create form data with the image
-    const formData = new FormData()
-    formData.append('file', {
-      uri: compressed.uri,
-      type: 'image/jpeg',
-      name: fileName,
-    } as any)
-
     // Upload using the file path directly with fetch API
     // We'll use arraybuffer instead of blob for React Native
+    // eslint-disable-next-line no-undef
     const response = await fetch(compressed.uri)
     const arrayBuffer = await response.arrayBuffer()
     const uint8Array = new Uint8Array(arrayBuffer)

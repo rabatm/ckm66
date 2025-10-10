@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { globalStyles, colors } from '@/theme'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 

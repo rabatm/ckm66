@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
@@ -10,26 +10,18 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { globalStyles, colors } from '@/theme'
-import type { BadgeCategory, BadgeWithProgress } from '../types/badge.types'
-import { CATEGORY_ICONS, LEVELS } from '../types/badge.types'
+import type { BadgeWithProgress } from '../types/badge.types'
+import { LEVELS } from '../types/badge.types'
 import { useBadges } from '../hooks/useBadges'
 import { BadgeIcon } from '@/components/ui/BadgeIcon'
 
 export function AccomplissementsScreen() {
   const { userProgress, isLoading, error, filterByCategory } = useBadges()
-  const [selectedCategory, setSelectedCategory] = useState<BadgeCategory | 'all'>('all')
   const [selectedBadge, setSelectedBadge] = useState<BadgeWithProgress | null>(null)
   const [showBadgeModal, setShowBadgeModal] = useState(false)
 
-  const categories: Array<{ key: BadgeCategory | 'all'; label: string; icon: string }> = [
-    { key: 'all', label: 'Tous', icon: 'trophy' },
-    { key: 'assiduity', label: 'Assiduité', icon: CATEGORY_ICONS.assiduity },
-    { key: 'technical', label: 'Technique', icon: CATEGORY_ICONS.technical },
-    { key: 'presence', label: 'Présence', icon: CATEGORY_ICONS.presence },
-    { key: 'attitude', label: 'Attitude', icon: CATEGORY_ICONS.attitude },
-  ]
-
-  const filteredBadges = filterByCategory(selectedCategory)
+  const filteredBadges = filterByCategory('all')
+  const myBadges = filteredBadges.filter((badge) => badge.is_unlocked)
 
   const handleBadgePress = (badge: BadgeWithProgress) => {
     setSelectedBadge(badge)
@@ -119,53 +111,18 @@ export function AccomplissementsScreen() {
           </View>
         </View>
 
-        {/* Category Filters */}
-        <View style={globalStyles.section}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesContainer}
-          >
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat.key}
-                style={[
-                  styles.categoryChip,
-                  selectedCategory === cat.key && styles.categoryChipActive,
-                ]}
-                onPress={() => setSelectedCategory(cat.key)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.categoryChipContent}>
-                  <Ionicons
-                    name={cat.icon as any}
-                    size={16}
-                    color={
-                      selectedCategory === cat.key ? colors.text.primary : colors.text.tertiary
-                    }
-                  />
-                  <Text
-                    style={[
-                      styles.categoryChipText,
-                      selectedCategory === cat.key && styles.categoryChipTextActive,
-                    ]}
-                  >
-                    {cat.label}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
         {/* Badges List */}
         <View style={globalStyles.section}>
-          {filteredBadges.length === 0 ? (
+          {myBadges.length === 0 ? (
             <View style={styles.emptyBadges}>
-              <Text style={styles.emptyBadgesText}>Aucun badge dans cette catégorie</Text>
+              <Ionicons name="medal" size={48} color={colors.text.tertiary} />
+              <Text style={styles.emptyBadgesText}>Aucun badge débloqué</Text>
+              <Text style={styles.emptyBadgesSubtext}>
+                Continue tes efforts pour gagner tes premiers badges !
+              </Text>
             </View>
           ) : (
-            filteredBadges.map((badge) => (
+            myBadges.map((badge) => (
               <TouchableOpacity
                 key={badge.id}
                 style={styles.badgeCard}
@@ -173,39 +130,17 @@ export function AccomplissementsScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.badgeCardLeft}>
-                  <View style={[styles.badgeIcon, !badge.is_unlocked && styles.badgeIconLocked]}>
-                    {badge.is_unlocked ? (
-                      <BadgeIcon badgeCode={badge.code} size={24} color={colors.secondary[500]} />
-                    ) : (
-                      <Ionicons name="lock-closed" size={24} color={colors.text.disabled} />
-                    )}
+                  <View style={styles.badgeIcon}>
+                    <BadgeIcon badgeCode={badge.code} size={24} color={colors.secondary[500]} />
                   </View>
                   <View style={styles.badgeInfo}>
-                    <Text style={[styles.badgeName, !badge.is_unlocked && styles.badgeNameLocked]}>
-                      {badge.name}
-                    </Text>
+                    <Text style={styles.badgeName}>{badge.name}</Text>
                     <Text style={styles.badgeDescription}>{badge.description}</Text>
 
-                    {badge.is_unlocked && badge.coach_name && (
+                    {badge.coach_name && (
                       <View style={styles.badgeCoachContainer}>
                         <Ionicons name="person" size={14} color={colors.text.tertiary} />
                         <Text style={styles.badgeCoach}>Attribué par {badge.coach_name}</Text>
-                      </View>
-                    )}
-
-                    {!badge.is_unlocked && badge.progress && (
-                      <View style={styles.badgeProgress}>
-                        <View style={styles.miniProgressBar}>
-                          <View
-                            style={[
-                              styles.miniProgressFill,
-                              { width: `${badge.progress.percentage}%` },
-                            ]}
-                          />
-                        </View>
-                        <Text style={styles.badgeProgressText}>
-                          {badge.progress.current}/{badge.progress.required}
-                        </Text>
                       </View>
                     )}
                   </View>
@@ -215,14 +150,12 @@ export function AccomplissementsScreen() {
                   <View style={styles.badgePoints}>
                     <Text style={styles.badgePointsText}>{badge.points} pts</Text>
                   </View>
-                  {badge.is_unlocked && (
-                    <Text style={styles.unlockedDate}>
-                      {new Date(badge.unlocked_at!).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </Text>
-                  )}
+                  <Text style={styles.unlockedDate}>
+                    {new Date(badge.unlocked_at!).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'short',
+                    })}
+                  </Text>
                 </View>
               </TouchableOpacity>
             ))
@@ -398,6 +331,12 @@ const styles = StyleSheet.create({
   emptyBadgesText: {
     fontSize: 14,
     color: colors.text.tertiary,
+  },
+  emptyBadgesSubtext: {
+    fontSize: 12,
+    color: colors.text.disabled,
+    marginTop: 4,
+    textAlign: 'center',
   },
   section: {
     paddingHorizontal: 20,

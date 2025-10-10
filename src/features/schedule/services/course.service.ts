@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { Course, CourseFilters, CourseWithReservations } from '../types'
+import type { Course, CourseFilters, CourseUserReservation, ReservationStatus } from '../types'
 
 /**
  * Course Service
@@ -55,13 +55,32 @@ export class CourseService {
           const isFull = availableSpots <= 0
 
           // Get user's reservation for this course if userId provided
-          let userReservation = null
+          let userReservation: CourseUserReservation | null = null
           if (userId) {
-            userReservation = await this.getUserReservationForCourse(userId, course.id)
+            const reservation = await this.getUserReservationForCourse(userId, course.id)
+            if (reservation && reservation.reservation_date) {
+              userReservation = {
+                id: reservation.id,
+                status: reservation.status as ReservationStatus,
+                reservation_date: reservation.reservation_date,
+                waiting_list_position: reservation.waiting_list_position,
+              }
+            }
           }
+
+          // Handle instructor join errors - if instructor is an error object, set to undefined
+          const instructorData = course as any
+          const instructor = instructorData.instructor?.error
+            ? undefined
+            : instructorData.instructor
+          const backupInstructor = instructorData.backup_instructor?.error
+            ? undefined
+            : instructorData.backup_instructor
 
           return {
             ...course,
+            instructor,
+            backup_instructor: backupInstructor,
             available_spots: availableSpots,
             is_full: isFull,
             user_reservation: userReservation,
@@ -102,8 +121,17 @@ export class CourseService {
 
       const availableSpots = course.max_capacity - course.current_reservations
 
+      // Handle instructor join errors
+      const courseData = course as any
+      const instructor = courseData.instructor?.error ? undefined : courseData.instructor
+      const backupInstructor = courseData.backup_instructor?.error
+        ? undefined
+        : courseData.backup_instructor
+
       return {
         ...course,
+        instructor,
+        backup_instructor: backupInstructor,
         available_spots: availableSpots,
         is_full: availableSpots <= 0,
       }
@@ -116,7 +144,15 @@ export class CourseService {
   /**
    * Get user's reservation for a specific course
    */
-  static async getUserReservationForCourse(userId: string, courseId: string): Promise<any | null> {
+  static async getUserReservationForCourse(
+    userId: string,
+    courseId: string
+  ): Promise<{
+    id: string
+    status: string
+    reservation_date: string | null
+    waiting_list_position: number | null
+  } | null> {
     try {
       const { data, error } = await supabase
         .from('reservations')
@@ -137,7 +173,7 @@ export class CourseService {
   /**
    * Get course reservations (for attendance list)
    */
-  static async getCourseReservations(courseId: string): Promise<any[]> {
+  static async getCourseReservations(courseId: string): Promise<unknown[]> {
     try {
       const { data, error } = await supabase
         .from('reservations')

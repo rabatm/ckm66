@@ -1,5 +1,5 @@
 import type { Tables } from '../../../@types/database.types'
-import type { Course, ReservationStatus } from './course.types'
+import type { Course } from './course.types'
 
 /**
  * Reservation Types

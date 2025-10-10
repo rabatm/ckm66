@@ -9,8 +9,6 @@ import type {
   SubscriptionInfo,
   SubscriptionStatus,
   SubscriptionType,
-  SUBSCRIPTION_TYPE_LABELS,
-  SUBSCRIPTION_STATUS_CONFIG,
 } from '../types/profile.types'
 
 const TYPE_LABELS: Record<SubscriptionType, string> = {

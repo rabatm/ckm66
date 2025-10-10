@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useRef } from 'react'
+import React, { createContext, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { AuthService } from './services/auth.service'
 import { useAuthStore } from './store/useAuthStore'
+import type { AuthUser } from './types/auth.types'
 
 const AuthContext = createContext<null>(null)
 
@@ -9,7 +10,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const initialized = useRef(false)
   const setUser = useAuthStore((state) => state.setUser)
   const setLoading = useAuthStore((state) => state.setLoading)
-  const setError = useAuthStore((state) => state.setError)
   const clearAuth = useAuthStore((state) => state.clearAuth)
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initialized.current = true
 
     let mounted = true
-    let subscription: any = null
+    let subscription: { unsubscribe: () => void } | null = null
 
     const initializeAuth = async () => {
       try {
@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 created_at: session.user.created_at,
                 updated_at: new Date().toISOString(),
               }
-              setUser(basicUser as any)
+              setUser(basicUser as AuthUser)
             }
           } else {
             console.log('No existing session found')
@@ -97,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               created_at: session.user.created_at,
               updated_at: new Date().toISOString(),
             }
-            setUser(basicUser as any)
+            setUser(basicUser as AuthUser)
           }
         } else if (event === 'SIGNED_OUT') {
           clearAuth()

@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import { AuthService } from '../services/auth.service'
 import { useAuthStore } from '../store/useAuthStore'
 import type { LoginCredentials } from '../types/auth.types'
@@ -12,7 +11,6 @@ export const useAuth = () => {
   const error = useAuthStore((state) => state.error)
   const setLoading = useAuthStore((state) => state.setLoading)
   const setError = useAuthStore((state) => state.setError)
-  const clearAuth = useAuthStore((state) => state.clearAuth)
   const updateUser = useAuthStore((state) => state.updateUser)
   // Fin initialisation
   // Vérifier l'état d'authentification
@@ -42,8 +40,9 @@ export const useAuth = () => {
       }
 
       // L'utilisateur sera mis à jour via onAuthStateChange
-    } catch (error: any) {
-      setError(error.message || 'Erreur de connexion')
+    } catch (error: unknown) {
+      const err = error as Error
+      setError(err.message || 'Erreur de connexion')
       throw error
     } finally {
       setLoading(false)
@@ -55,8 +54,9 @@ export const useAuth = () => {
       setLoading(true)
       await AuthService.signOut()
       // Le clearAuth sera appelé via onAuthStateChange
-    } catch (error: any) {
-      setError(error.message || 'Erreur de déconnexion')
+    } catch (error: unknown) {
+      const err = error as Error
+      setError(err.message || 'Erreur de déconnexion')
     } finally {
       setLoading(false)
     }
@@ -67,8 +67,9 @@ export const useAuth = () => {
       setLoading(true)
       setError(null)
       await AuthService.resetPassword(email)
-    } catch (error: any) {
-      setError(error.message || 'Erreur lors de la réinitialisation')
+    } catch (error: unknown) {
+      const err = error as Error
+      setError(err.message || 'Erreur lors de la réinitialisation')
       throw error
     } finally {
       setLoading(false)
