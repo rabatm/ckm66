@@ -47,7 +47,10 @@ export const SUBSCRIPTION_TYPE_LABELS: Record<SubscriptionType, string> = {
   session_pack: 'Pack de séances',
 }
 
-export const SUBSCRIPTION_STATUS_CONFIG: Record<SubscriptionStatus, { label: string; color: string }> = {
+export const SUBSCRIPTION_STATUS_CONFIG: Record<
+  SubscriptionStatus,
+  { label: string; color: string }
+> = {
   active: { label: 'Actif', color: '#10B981' },
   expiring: { label: 'Expire bientôt', color: '#F59E0B' },
   expired: { label: 'Expiré', color: '#EF4444' },

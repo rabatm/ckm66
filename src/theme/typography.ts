@@ -25,5 +25,5 @@ export const typography = {
     tight: 1.2,
     normal: 1.5,
     relaxed: 1.75,
-  }
+  },
 }

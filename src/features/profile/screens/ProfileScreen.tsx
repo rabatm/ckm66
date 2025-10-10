@@ -1,5 +1,13 @@
 import React, { useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native'
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, typography } from '@/theme'
@@ -12,7 +20,7 @@ import {
   LevelProgressCard,
   BadgeStatsCard,
   SubscriptionCard,
-  EditProfileModal
+  EditProfileModal,
 } from '../components'
 
 interface ProfileScreenProps {
@@ -22,7 +30,11 @@ interface ProfileScreenProps {
 export function ProfileScreen({ onBack }: ProfileScreenProps) {
   const { user, signOut, updateUser } = useAuth()
   const { userProgress, isLoading, error, refetch: refetchBadges } = useBadges()
-  const { subscriptionInfo, isLoading: isLoadingSubscription, refetch: refetchSubscription } = useSubscription()
+  const {
+    subscriptionInfo,
+    isLoading: isLoadingSubscription,
+    refetch: refetchSubscription,
+  } = useSubscription()
   const [showEditModal, setShowEditModal] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
 
@@ -32,24 +44,20 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
   }
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Déconnexion',
-      'Voulez-vous vraiment vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Déconnexion',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await signOut()
-            } catch (error) {
-              Alert.alert('Erreur', 'Impossible de se déconnecter')
-            }
+    Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Déconnexion',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOut()
+          } catch (error) {
+            Alert.alert('Erreur', 'Impossible de se déconnecter')
           }
-        }
-      ]
-    )
+        },
+      },
+    ])
   }
 
   const handleChangePhoto = async () => {
@@ -80,9 +88,10 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
     if (!user?.id) return
 
     try {
-      const permissionResult = source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync()
+      const permissionResult =
+        source === 'camera'
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync()
 
       if (permissionResult.status !== 'granted') {
         Alert.alert(
@@ -92,19 +101,20 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
         return
       }
 
-      const result = source === 'camera'
-        ? await ImagePicker.launchCameraAsync({
-            mediaTypes: 'images',
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          })
-        : await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: 'images',
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          })
+      const result =
+        source === 'camera'
+          ? await ImagePicker.launchCameraAsync({
+              mediaTypes: 'images',
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            })
+          : await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: 'images',
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            })
 
       if (!result.canceled && result.assets[0]) {
         setIsUploadingPhoto(true)
@@ -190,9 +200,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
             activeOpacity={0.7}
           >
             <Ionicons name="log-out-outline" size={18} color={colors.error} />
-            <Text style={[styles.actionButtonText, styles.logoutButtonText]}>
-              Se déconnecter
-            </Text>
+            <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Se déconnecter</Text>
           </TouchableOpacity>
         </View>
 

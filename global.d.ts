@@ -28,5 +28,21 @@ declare module 'react-native' {
   }
 }
 
+// Image assets type declarations
+declare module '*.png' {
+  const value: number
+  export default value
+}
+
+declare module '*.jpg' {
+  const value: number
+  export default value
+}
+
+declare module '*.jpeg' {
+  const value: number
+  export default value
+}
+
 // Make sure this file is treated as a module
 export {}

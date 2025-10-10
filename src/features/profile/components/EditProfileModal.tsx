@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, Modal, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native'
+import {
+  View,
+  Text,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native'
 import { colors, spacing, typography } from '@/theme'
 import { updateProfile } from '../services/profile.service'
 
@@ -66,11 +75,7 @@ export function EditProfileModal({
         <View style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.title}>Modifier mon profil</Text>
-            <TouchableOpacity
-              onPress={onClose}
-              style={styles.closeButton}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity onPress={onClose} style={styles.closeButton} activeOpacity={0.7}>
               <Text style={styles.closeButtonText}>×</Text>
             </TouchableOpacity>
           </View>
@@ -110,11 +115,7 @@ export function EditProfileModal({
           </View>
 
           <View style={styles.buttons}>
-            <TouchableOpacity
-              style={styles.buttonSecondary}
-              onPress={onClose}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity style={styles.buttonSecondary} onPress={onClose} activeOpacity={0.7}>
               <Text style={styles.buttonSecondaryText}>Annuler</Text>
             </TouchableOpacity>
             <TouchableOpacity

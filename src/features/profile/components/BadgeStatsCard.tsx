@@ -10,7 +10,11 @@ interface BadgeStatsCardProps {
   badgesPercentage: number
 }
 
-export function BadgeStatsCard({ unlockedBadges, totalBadges, badgesPercentage }: BadgeStatsCardProps) {
+export function BadgeStatsCard({
+  unlockedBadges,
+  totalBadges,
+  badgesPercentage,
+}: BadgeStatsCardProps) {
   return (
     <DarkCard>
       <View style={styles.header}>
@@ -21,16 +25,9 @@ export function BadgeStatsCard({ unlockedBadges, totalBadges, badgesPercentage }
       </View>
       <View style={styles.progressBarContainer}>
         <View style={styles.progressBar}>
-          <View
-            style={[
-              styles.progressBarFill,
-              { width: `${badgesPercentage}%` },
-            ]}
-          />
+          <View style={[styles.progressBarFill, { width: `${badgesPercentage}%` }]} />
         </View>
-        <Text style={styles.progressPercentage}>
-          {Math.round(badgesPercentage)}%
-        </Text>
+        <Text style={styles.progressPercentage}>{Math.round(badgesPercentage)}%</Text>
       </View>
     </DarkCard>
   )

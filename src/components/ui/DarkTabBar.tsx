@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, typography } from '@/theme'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-export type TabType = 'schedule' | 'accomplishments' | 'profile'
+export type TabType = 'schedule' | 'accomplishments' | 'reservations' | 'profile'
 
 interface TabConfig {
   key: TabType
@@ -30,6 +30,11 @@ const TABS: TabConfig[] = [
     icon: 'trophy-outline',
   },
   {
+    key: 'reservations',
+    label: 'Réservations',
+    icon: 'list-outline',
+  },
+  {
     key: 'profile',
     label: 'Profil',
     icon: 'person-outline',
@@ -49,7 +54,8 @@ export const DarkTabBar: React.FC<DarkTabBarProps> = ({ activeTab, onTabChange }
           style={[
             styles.innerContainer,
             {
-              paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, spacing.sm) : spacing.sm,
+              paddingBottom:
+                Platform.OS === 'ios' ? Math.max(insets.bottom, spacing.sm) : spacing.sm,
             },
           ]}
         >
@@ -65,12 +71,7 @@ export const DarkTabBar: React.FC<DarkTabBarProps> = ({ activeTab, onTabChange }
               >
                 <View style={styles.tabContent}>
                   {/* Icon */}
-                  <View
-                    style={[
-                      styles.iconContainer,
-                      isActive && styles.iconContainerActive,
-                    ]}
-                  >
+                  <View style={[styles.iconContainer, isActive && styles.iconContainerActive]}>
                     <Ionicons
                       name={tab.icon}
                       size={24}
@@ -79,14 +80,7 @@ export const DarkTabBar: React.FC<DarkTabBarProps> = ({ activeTab, onTabChange }
                   </View>
 
                   {/* Label */}
-                  <Text
-                    style={[
-                      styles.label,
-                      isActive && styles.labelActive,
-                    ]}
-                  >
-                    {tab.label}
-                  </Text>
+                  <Text style={[styles.label, isActive && styles.labelActive]}>{tab.label}</Text>
 
                   {/* Active indicator dot */}
                   {isActive && <View style={styles.activeDot} />}
@@ -149,7 +143,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xs,
-    transition: 'all 0.2s',
   },
   iconContainerActive: {
     backgroundColor: 'rgba(185, 28, 28, 0.15)', // Rouge très subtil

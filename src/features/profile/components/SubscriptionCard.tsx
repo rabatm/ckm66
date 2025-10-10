@@ -59,9 +59,7 @@ export function SubscriptionCard({ subscriptionInfo, isLoading }: SubscriptionCa
                 <Ionicons name="ticket" size={14} color={colors.text.tertiary} />
                 <Text style={styles.label}>Séances restantes</Text>
               </View>
-              <Text style={styles.value}>
-                {subscriptionInfo.subscription.remaining_sessions}
-              </Text>
+              <Text style={styles.value}>{subscriptionInfo.subscription.remaining_sessions}</Text>
             </View>
             <View style={styles.sessionProgressBar}>
               <View
@@ -80,7 +78,8 @@ export function SubscriptionCard({ subscriptionInfo, isLoading }: SubscriptionCa
         {subscriptionInfo.isExpiringSoon && (
           <View style={styles.warningBanner}>
             <Text style={styles.warningText}>
-              ⚠️ Votre abonnement expire dans {subscriptionInfo.daysRemaining} jour{subscriptionInfo.daysRemaining && subscriptionInfo.daysRemaining > 1 ? 's' : ''}
+              ⚠️ Votre abonnement expire dans {subscriptionInfo.daysRemaining} jour
+              {subscriptionInfo.daysRemaining && subscriptionInfo.daysRemaining > 1 ? 's' : ''}
             </Text>
           </View>
         )}

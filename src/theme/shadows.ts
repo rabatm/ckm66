@@ -30,5 +30,5 @@ export const shadows = {
     shadowOpacity: 0.25,
     shadowRadius: 15,
     elevation: 12,
-  }
+  },
 }

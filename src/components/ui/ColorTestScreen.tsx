@@ -10,16 +10,16 @@ export function ColorTestScreen() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>🎨 Test des Couleurs Rouge Sombre</Text>
-      
+
       {/* Primary Colors */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Couleurs Primaires</Text>
-        
+
         <View style={styles.colorRow}>
           <View style={[styles.colorBox, { backgroundColor: colors.primary[500] }]} />
           <Text style={styles.colorText}>Primary 500: {colors.primary[500]}</Text>
         </View>
-        
+
         <View style={styles.colorRow}>
           <View style={[styles.colorBox, { backgroundColor: colors.primary[600] }]} />
           <Text style={styles.colorText}>Primary 600: {colors.primary[600]}</Text>
@@ -29,12 +29,12 @@ export function ColorTestScreen() {
       {/* Border Colors */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Bordures</Text>
-        
+
         <View style={styles.colorRow}>
           <View style={[styles.colorBox, { backgroundColor: colors.border.light }]} />
           <Text style={styles.colorText}>Border Light: {colors.border.light}</Text>
         </View>
-        
+
         <View style={styles.colorRow}>
           <View style={[styles.colorBox, { backgroundColor: colors.border.dark }]} />
           <Text style={styles.colorText}>Border Dark: {colors.border.dark}</Text>

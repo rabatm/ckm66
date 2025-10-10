@@ -47,15 +47,15 @@ export function useBadges() {
 
   const filterByCategory = (category: BadgeCategory | 'all'): BadgeWithProgress[] => {
     if (category === 'all') return badges
-    return badges.filter(badge => badge.category === category)
+    return badges.filter((badge) => badge.category === category)
   }
 
   const getUnlockedBadges = (): BadgeWithProgress[] => {
-    return badges.filter(badge => badge.is_unlocked)
+    return badges.filter((badge) => badge.is_unlocked)
   }
 
   const getLockedBadges = (): BadgeWithProgress[] => {
-    return badges.filter(badge => !badge.is_unlocked)
+    return badges.filter((badge) => !badge.is_unlocked)
   }
 
   return {

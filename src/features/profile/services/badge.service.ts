@@ -4,7 +4,14 @@
  */
 
 import { supabase } from '@/lib/supabase'
-import type { Badge, UserBadge, BadgeWithProgress, UserProgress, BadgeCategory, BadgeType } from '../types/badge.types'
+import type {
+  Badge,
+  UserBadge,
+  BadgeWithProgress,
+  UserProgress,
+  BadgeCategory,
+  BadgeType,
+} from '../types/badge.types'
 import { LEVELS } from '../types/badge.types'
 
 // Re-export types for convenience
@@ -34,11 +41,13 @@ export async function fetchAllBadges(): Promise<Badge[]> {
 export async function fetchUserBadges(userId: string): Promise<UserBadge[]> {
   const { data, error } = await supabase
     .from('user_badges')
-    .select(`
+    .select(
+      `
       *,
       badge:badges(*),
       coach:profiles!user_badges_awarded_by_fkey(id, first_name, last_name)
-    `)
+    `
+    )
     .eq('user_id', userId)
     .order('unlocked_at', { ascending: false })
 
@@ -74,7 +83,7 @@ export async function fetchBadgesWithProgress(userId: string): Promise<BadgeWith
   // If no profile exists, return badges without progress
   if (!profile) {
     console.warn(`No profile found for user ${userId}`)
-    return allBadges.map(badge => ({
+    return allBadges.map((badge) => ({
       ...badge,
       is_unlocked: false,
       unlocked_at: undefined,
@@ -86,8 +95,8 @@ export async function fetchBadgesWithProgress(userId: string): Promise<BadgeWith
   }
 
   // Map badges with progress
-  const badgesWithProgress: BadgeWithProgress[] = allBadges.map(badge => {
-    const userBadge = userBadges.find(ub => ub.badge_id === badge.id)
+  const badgesWithProgress: BadgeWithProgress[] = allBadges.map((badge) => {
+    const userBadge = userBadges.find((ub) => ub.badge_id === badge.id)
     const isUnlocked = !!userBadge
 
     let progress: BadgeWithProgress['progress'] | undefined
@@ -183,9 +192,7 @@ export async function getUserProgress(userId: string): Promise<UserProgress> {
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
 
-  const badgesPercentage = totalBadges
-    ? Math.round(((unlockedBadges || 0) / totalBadges) * 100)
-    : 0
+  const badgesPercentage = totalBadges ? Math.round(((unlockedBadges || 0) / totalBadges) * 100) : 0
 
   return {
     total_points: totalPoints,
@@ -209,8 +216,7 @@ export async function checkAndUnlockBadges(userId: string): Promise<{
   newly_unlocked_badges: Array<{ badge_id: string; code: string; name: string; points: number }>
 }> {
   try {
-    const { data, error } = await supabase
-      .rpc('check_and_unlock_badges', { p_user_id: userId })
+    const { data, error } = await supabase.rpc('check_and_unlock_badges', { p_user_id: userId })
 
     if (error) {
       console.error('Error checking and unlocking badges:', error)
@@ -302,13 +308,11 @@ export async function getBadgeStats(userId: string) {
 
   const stats = {
     total_badges: badges.length,
-    unlocked_badges: badges.filter(b => b.is_unlocked).length,
-    locked_badges: badges.filter(b => !b.is_unlocked).length,
-    automatic_unlocked: badges.filter(b => b.is_unlocked && b.type === 'automatic').length,
-    manual_unlocked: badges.filter(b => b.is_unlocked && b.type === 'manual').length,
-    total_points: badges
-      .filter(b => b.is_unlocked)
-      .reduce((sum, b) => sum + b.points, 0),
+    unlocked_badges: badges.filter((b) => b.is_unlocked).length,
+    locked_badges: badges.filter((b) => !b.is_unlocked).length,
+    automatic_unlocked: badges.filter((b) => b.is_unlocked && b.type === 'automatic').length,
+    manual_unlocked: badges.filter((b) => b.is_unlocked && b.type === 'manual').length,
+    total_points: badges.filter((b) => b.is_unlocked).reduce((sum, b) => sum + b.points, 0),
     by_category: {} as Record<BadgeCategory, { total: number; unlocked: number }>,
   }
 
@@ -325,11 +329,11 @@ export async function getBadgeStats(userId: string) {
     'custom',
   ]
 
-  categories.forEach(category => {
-    const categoryBadges = badges.filter(b => b.category === category)
+  categories.forEach((category) => {
+    const categoryBadges = badges.filter((b) => b.category === category)
     stats.by_category[category] = {
       total: categoryBadges.length,
-      unlocked: categoryBadges.filter(b => b.is_unlocked).length,
+      unlocked: categoryBadges.filter((b) => b.is_unlocked).length,
     }
   })
 

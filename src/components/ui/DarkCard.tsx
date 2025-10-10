@@ -8,20 +8,8 @@ interface DarkCardProps {
   noPadding?: boolean
 }
 
-export const DarkCard: React.FC<DarkCardProps> = ({
-  children,
-  style,
-  noPadding,
-}) => {
-  return (
-    <View style={[
-      styles.card,
-      noPadding && styles.noPadding,
-      style,
-    ]}>
-      {children}
-    </View>
-  )
+export const DarkCard: React.FC<DarkCardProps> = ({ children, style, noPadding }) => {
+  return <View style={[styles.card, noPadding && styles.noPadding, style]}>{children}</View>
 }
 
 const styles = StyleSheet.create({

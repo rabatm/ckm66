@@ -47,15 +47,10 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
             {/* Avatar */}
             <View style={styles.avatarContainer}>
               {profilePictureUrl ? (
-                <Image
-                  source={{ uri: profilePictureUrl }}
-                  style={styles.avatar}
-                />
+                <Image source={{ uri: profilePictureUrl }} style={styles.avatar} />
               ) : (
                 <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarText}>
-                    {firstName.charAt(0).toUpperCase()}
-                  </Text>
+                  <Text style={styles.avatarText}>{firstName.charAt(0).toUpperCase()}</Text>
                 </View>
               )}
               {/* Level indicator badge on avatar */}
@@ -74,12 +69,7 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
               <Text style={styles.greeting}>Bonjour 👋</Text>
               <Text style={styles.name}>{firstName}</Text>
               <View style={styles.levelContainer}>
-                <View
-                  style={[
-                    styles.levelDot,
-                    { backgroundColor: levelInfo.color },
-                  ]}
-                />
+                <View style={[styles.levelDot, { backgroundColor: levelInfo.color }]} />
                 <Text style={styles.levelText}>{levelInfo.title}</Text>
                 <Text style={styles.pointsText}>• {totalPoints} pts</Text>
               </View>

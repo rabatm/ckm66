@@ -10,9 +10,10 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { BlurView } from 'expo-blur'
 import { useAuth } from '../hooks/useAuth'
 import type { LoginCredentials } from '../types/auth.types'
-import { colors } from '@/theme'
+import { colors, spacing, typography } from '@/theme'
 
 interface LoginFormProps {
   onLoginSuccess?: () => void
@@ -83,97 +84,115 @@ export const LoginForm = ({ onLoginSuccess, onForgotPassword }: LoginFormProps) 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>CKM66</Text>
-          <Text style={styles.subtitle}>Krav Maga Perpignan</Text>
-        </View>
+        {/* Spacer for logo in background */}
+        <View style={styles.logoSpacer} />
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Connexion</Text>
+        {/* Login Card with Glassmorphism */}
+        <BlurView intensity={20} tint="dark" style={styles.card}>
+          <View style={styles.cardContent}>
+            <Text style={styles.cardTitle}>Connexion</Text>
 
-          {error && (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-
-          <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={[styles.input, validationErrors.email && styles.inputError]}
-              value={formData.email}
-              onChangeText={(value) => handleInputChange('email', value)}
-              placeholder="votre.email@exemple.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isLoading}
-              placeholderTextColor={colors.text.disabled}
-            />
-            {validationErrors.email && (
-              <Text style={styles.errorMessage}>{validationErrors.email}</Text>
+            {error && (
+              <BlurView intensity={10} tint="dark" style={styles.errorBanner}>
+                <Ionicons name="alert-circle" size={20} color={colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+              </BlurView>
             )}
-          </View>
 
-          <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Mot de passe</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[
-                  styles.input,
-                  styles.passwordInput,
-                  validationErrors.password && styles.inputError,
-                ]}
-                value={formData.password}
-                onChangeText={(value) => handleInputChange('password', value)}
-                placeholder="Votre mot de passe"
-                secureTextEntry={!showPassword}
-                editable={!isLoading}
-                placeholderTextColor={colors.text.disabled}
-              />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
-                activeOpacity={0.7}
-              >
+            {/* Email Input with Icon */}
+            <View style={styles.inputWrapper}>
+              <View style={[styles.inputContainer, validationErrors.email && styles.inputError]}>
                 <Ionicons
-                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-                  size={22}
+                  name="mail-outline"
+                  size={20}
                   color={colors.text.tertiary}
+                  style={styles.inputIcon}
                 />
-              </TouchableOpacity>
+                <TextInput
+                  style={styles.input}
+                  value={formData.email}
+                  onChangeText={(value) => handleInputChange('email', value)}
+                  placeholder="Email"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isLoading}
+                  placeholderTextColor={colors.text.disabled}
+                />
+              </View>
+              {validationErrors.email && (
+                <Text style={styles.errorMessage}>{validationErrors.email}</Text>
+              )}
             </View>
-            {validationErrors.password && (
-              <Text style={styles.errorMessage}>{validationErrors.password}</Text>
-            )}
-          </View>
 
-          <View style={styles.forgotPasswordContainer}>
+            {/* Password Input with Icon */}
+            <View style={styles.inputWrapper}>
+              <View style={[styles.inputContainer, validationErrors.password && styles.inputError]}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={colors.text.tertiary}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={[styles.input, styles.passwordInput]}
+                  value={formData.password}
+                  onChangeText={(value) => handleInputChange('password', value)}
+                  placeholder="Mot de passe"
+                  secureTextEntry={!showPassword}
+                  editable={!isLoading}
+                  placeholderTextColor={colors.text.disabled}
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                    size={20}
+                    color={colors.text.tertiary}
+                  />
+                </TouchableOpacity>
+              </View>
+              {validationErrors.password && (
+                <Text style={styles.errorMessage}>{validationErrors.password}</Text>
+              )}
+            </View>
+
+            {/* Forgot Password */}
             <TouchableOpacity
+              style={styles.forgotPasswordContainer}
               onPress={handleForgotPassword}
               disabled={isLoading}
               activeOpacity={0.7}
             >
               <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
             </TouchableOpacity>
+
+            {/* Login Button */}
+            <TouchableOpacity
+              style={[styles.button, isLoading && styles.buttonDisabled]}
+              onPress={handleSubmit}
+              disabled={isLoading}
+              activeOpacity={0.8}
+            >
+              {isLoading ? (
+                <ActivityIndicator color={colors.text.primary} size="small" />
+              ) : (
+                <View style={styles.buttonContent}>
+                  <Text style={styles.buttonText}>Se connecter</Text>
+                  <Ionicons name="arrow-forward" size={20} color={colors.text.primary} />
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
+        </BlurView>
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleSubmit}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={colors.text.primary} />
-            ) : (
-              <Text style={styles.buttonText}>Se connecter</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
+        {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Besoin d aide ? Contactez votre instructeur</Text>
+          <Ionicons name="information-circle-outline" size={16} color={colors.text.tertiary} />
+          <Text style={styles.footerText}>Besoin d'aide ? Contactez votre instructeur</Text>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -186,128 +205,128 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
+    justifyContent: 'flex-end',
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing['4xl'],
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: colors.primary[500],
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.text.secondary,
+  logoSpacer: {
+    flex: 1,
   },
   card: {
-    backgroundColor: colors.background.secondary,
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 28,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.border.dark,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  cardContent: {
+    padding: spacing['2xl'],
   },
   cardTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: typography.sizes['2xl'],
+    fontWeight: typography.weights.bold,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.xl,
     color: colors.text.primary,
   },
   errorBanner: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderColor: colors.error,
-    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.error,
+    overflow: 'hidden',
   },
   errorText: {
+    flex: 1,
     color: colors.error,
-    textAlign: 'center',
-    fontSize: 14,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.medium,
   },
   inputWrapper: {
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text.secondary,
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: colors.background.tertiary,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: colors.border.light,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
+    borderRadius: 16,
+    paddingHorizontal: spacing.lg,
+    height: 56,
+  },
+  inputIcon: {
+    marginRight: spacing.md,
+  },
+  input: {
+    flex: 1,
+    fontSize: typography.sizes.base,
     color: colors.text.primary,
+    height: '100%',
   },
   inputError: {
     borderColor: colors.error,
-  },
-  passwordContainer: {
-    position: 'relative',
+    borderWidth: 1.5,
   },
   passwordInput: {
-    paddingRight: 50,
+    paddingRight: spacing.xl,
   },
   eyeButton: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
-    padding: 4,
-  },
-  eyeIcon: {
-    fontSize: 20,
+    padding: spacing.sm,
+    marginLeft: spacing.xs,
   },
   errorMessage: {
     color: colors.error,
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: typography.sizes.xs,
+    marginTop: spacing.xs,
+    marginLeft: spacing.md,
   },
   forgotPasswordContainer: {
     alignItems: 'flex-end',
-    marginBottom: 24,
-    marginTop: -4,
+    marginBottom: spacing.xl,
   },
   forgotPasswordText: {
     color: colors.primary[500],
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
   },
   button: {
     backgroundColor: colors.primary[500],
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
+    height: 56,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.primary[500],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   buttonText: {
     color: colors.text.primary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
   },
   footer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 48,
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginTop: spacing['3xl'],
   },
   footerText: {
     color: colors.text.tertiary,
-    fontSize: 12,
-    textAlign: 'center',
+    fontSize: typography.sizes.xs,
   },
 })

@@ -69,7 +69,11 @@ const BADGE_ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
   first_login: 'enter-outline',
 }
 
-export const BadgeIcon: React.FC<BadgeIconProps> = ({ badgeCode, size = 24, color = '#6B7280' }) => {
+export const BadgeIcon: React.FC<BadgeIconProps> = ({
+  badgeCode,
+  size = 24,
+  color = '#6B7280',
+}) => {
   const iconName = BADGE_ICON_MAP[badgeCode] || 'help-circle-outline'
 
   return <Ionicons name={iconName} size={size} color={color} />

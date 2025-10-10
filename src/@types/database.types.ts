@@ -91,6 +91,7 @@ export type Database = {
           backup_instructor_id: string | null
           created_at: string | null
           created_by: string | null
+          course_type: string | null
           current_reservations: number
           day_of_week: number | null
           description: string | null
@@ -105,6 +106,7 @@ export type Database = {
           max_age: number | null
           max_capacity: number
           min_age: number | null
+          one_time_date: string | null
           prerequisites: string[] | null
           recurrence_end: string | null
           required_equipment: string[] | null
@@ -117,6 +119,7 @@ export type Database = {
           backup_instructor_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          course_type?: string | null
           current_reservations?: number
           day_of_week?: number | null
           description?: string | null
@@ -131,6 +134,7 @@ export type Database = {
           max_age?: number | null
           max_capacity?: number
           min_age?: number | null
+          one_time_date?: string | null
           prerequisites?: string[] | null
           recurrence_end?: string | null
           required_equipment?: string[] | null
@@ -143,6 +147,7 @@ export type Database = {
           backup_instructor_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          course_type?: string | null
           current_reservations?: number
           day_of_week?: number | null
           description?: string | null
@@ -157,6 +162,7 @@ export type Database = {
           max_age?: number | null
           max_capacity?: number
           min_age?: number | null
+          one_time_date?: string | null
           prerequisites?: string[] | null
           recurrence_end?: string | null
           required_equipment?: string[] | null
@@ -182,6 +188,100 @@ export type Database = {
           },
           {
             foreignKeyName: 'courses_instructor_id_fkey'
+            columns: ['instructor_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      course_instances: {
+        Row: {
+          backup_instructor_id: string | null
+          cancellation_reason: string | null
+          course_id: string | null
+          created_at: string | null
+          current_reservations: number
+          duration_minutes: number
+          end_time: string
+          id: string
+          instance_date: string
+          instructor_id: string | null
+          is_exceptional: boolean | null
+          is_one_time: boolean | null
+          location: string
+          max_capacity: number
+          notes: string | null
+          one_time_description: string | null
+          one_time_max_participants: number | null
+          one_time_title: string | null
+          start_time: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          backup_instructor_id?: string | null
+          cancellation_reason?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          current_reservations?: number
+          duration_minutes?: number
+          end_time: string
+          id?: string
+          instance_date: string
+          instructor_id?: string | null
+          is_exceptional?: boolean | null
+          is_one_time?: boolean | null
+          location?: string
+          max_capacity?: number
+          notes?: string | null
+          one_time_description?: string | null
+          one_time_max_participants?: number | null
+          one_time_title?: string | null
+          start_time: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          backup_instructor_id?: string | null
+          cancellation_reason?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          current_reservations?: number
+          duration_minutes?: number
+          end_time?: string
+          id?: string
+          instance_date?: string
+          instructor_id?: string | null
+          is_exceptional?: boolean | null
+          is_one_time?: boolean | null
+          location?: string
+          max_capacity?: number
+          notes?: string | null
+          one_time_description?: string | null
+          one_time_max_participants?: number | null
+          one_time_title?: string | null
+          start_time?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'course_instances_backup_instructor_id_fkey'
+            columns: ['backup_instructor_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'course_instances_course_id_fkey'
+            columns: ['course_id']
+            isOneToOne: false
+            referencedRelation: 'courses'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'course_instances_instructor_id_fkey'
             columns: ['instructor_id']
             isOneToOne: false
             referencedRelation: 'profiles'
@@ -429,6 +529,7 @@ export type Database = {
           check_in_time: string | null
           check_out_time: string | null
           course_id: string | null
+          course_instance_id: string | null
           created_at: string | null
           id: string
           last_notification_date: string | null
@@ -455,6 +556,7 @@ export type Database = {
           check_in_time?: string | null
           check_out_time?: string | null
           course_id?: string | null
+          course_instance_id?: string | null
           created_at?: string | null
           id?: string
           last_notification_date?: string | null
@@ -481,6 +583,7 @@ export type Database = {
           check_in_time?: string | null
           check_out_time?: string | null
           course_id?: string | null
+          course_instance_id?: string | null
           created_at?: string | null
           id?: string
           last_notification_date?: string | null
@@ -506,6 +609,13 @@ export type Database = {
             columns: ['course_id']
             isOneToOne: false
             referencedRelation: 'courses'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'reservations_course_instance_id_fkey'
+            columns: ['course_instance_id']
+            isOneToOne: false
+            referencedRelation: 'course_instances'
             referencedColumns: ['id']
           },
           {
@@ -637,10 +747,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      update_waiting_list_positions: {
-        Args: { course_id: string }
-        Returns: undefined
-      }
       check_and_unlock_badges: {
         Args: { p_user_id: string }
         Returns: Array<{
@@ -652,6 +758,55 @@ export type Database = {
             points: number
           }>
         }>
+      }
+      create_one_time_course_instance: {
+        Args: {
+          p_title: string
+          p_description: string
+          p_scheduled_date: string
+          p_start_time: string
+          p_end_time: string
+          p_max_participants: number
+          p_instructor_id: string
+          p_location: string
+          p_duration_minutes?: number
+        }
+        Returns: string
+      }
+      decrement_course_reservations: {
+        Args: { course_id: string }
+        Returns: undefined
+      }
+      decrement_instance_reservations: {
+        Args: { instance_id: string }
+        Returns: undefined
+      }
+      generate_all_course_instances: {
+        Args: { p_weeks_ahead?: number }
+        Returns: Array<{
+          course_id: string
+          instances_created: number
+        }>
+      }
+      generate_course_instances: {
+        Args: { p_course_id: string; p_weeks_ahead?: number }
+        Returns: number
+      }
+      increment_course_reservations: {
+        Args: { course_id: string }
+        Returns: undefined
+      }
+      increment_instance_reservations: {
+        Args: { instance_id: string }
+        Returns: undefined
+      }
+      update_waiting_list_positions: {
+        Args: { course_id: string }
+        Returns: undefined
+      }
+      update_instance_waiting_list_positions: {
+        Args: { instance_id: string }
+        Returns: undefined
       }
     }
     Enums: {

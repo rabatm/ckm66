@@ -29,11 +29,13 @@ export const DarkInput: React.FC<DarkInputProps> = ({
   return (
     <View style={[styles.container, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[
-        styles.inputContainer,
-        isFocused && styles.inputFocused,
-        error && styles.inputError,
-      ]}>
+      <View
+        style={[
+          styles.inputContainer,
+          isFocused && styles.inputFocused,
+          error && styles.inputError,
+        ]}
+      >
         {icon && <View style={styles.icon}>{icon}</View>}
         <TextInput
           style={styles.input}

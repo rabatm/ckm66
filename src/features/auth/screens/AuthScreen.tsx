@@ -1,9 +1,10 @@
 import React from 'react'
-import { View, StyleSheet } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
+import { View, StyleSheet, ImageBackground } from 'react-native'
 import { LoginForm } from '../components/LoginForm'
 import { useAuth } from '../hooks/useAuth'
 import { colors } from '@/theme'
+
+const loginBackground = require('@/assets/login-bg.png') as number
 
 export const AuthScreen = () => {
   const { resetPassword } = useAuth()
@@ -23,14 +24,11 @@ export const AuthScreen = () => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[colors.primary[500], colors.primary[600]]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
-      >
+      {/* Background Image */}
+      <ImageBackground source={loginBackground} style={styles.background} resizeMode="cover">
         <View style={styles.overlay} />
-      </LinearGradient>
+      </ImageBackground>
+
       <View style={styles.content}>
         <LoginForm onLoginSuccess={handleLoginSuccess} onForgotPassword={handleForgotPassword} />
       </View>
@@ -43,16 +41,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.primary,
   },
-  gradient: {
+  background: {
     position: 'absolute',
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
+    width: '100%',
+    height: '100%',
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(26, 32, 44, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   content: {
     flex: 1,

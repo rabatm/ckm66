@@ -76,11 +76,13 @@ export interface BadgeWithProgress extends Badge {
   awarded_by?: string | null | undefined
   coach_name?: string | undefined
   coach_message?: string | null | undefined
-  progress?: {
-    current: number
-    required: number
-    percentage: number
-  } | undefined
+  progress?:
+    | {
+        current: number
+        required: number
+        percentage: number
+      }
+    | undefined
 }
 
 export type UserLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7
@@ -122,10 +124,13 @@ export interface BadgeStats {
   automatic_unlocked: number
   manual_unlocked: number
   total_points: number
-  by_category: Record<BadgeCategory, {
-    total: number
-    unlocked: number
-  }>
+  by_category: Record<
+    BadgeCategory,
+    {
+      total: number
+      unlocked: number
+    }
+  >
 }
 
 export const CATEGORY_LABELS: Record<BadgeCategory, string> = {

@@ -28,10 +28,7 @@ export function ProfileHeader({
       <TouchableOpacity onPress={onChangePhoto} disabled={isUploadingPhoto} activeOpacity={0.8}>
         <View style={styles.avatarContainer}>
           {profilePictureUrl ? (
-            <Image
-              source={{ uri: profilePictureUrl }}
-              style={styles.avatarImage}
-            />
+            <Image source={{ uri: profilePictureUrl }} style={styles.avatarImage} />
           ) : (
             <LinearGradient
               colors={[colors.primary[500], colors.primary[600]]}
@@ -59,7 +56,8 @@ export function ProfileHeader({
       <Text style={styles.userEmail}>{email}</Text>
       {joinDate && (
         <Text style={styles.joinDate}>
-          Membre depuis {new Date(joinDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+          Membre depuis{' '}
+          {new Date(joinDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
         </Text>
       )}
     </View>

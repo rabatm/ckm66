@@ -75,9 +75,7 @@ function AppContent() {
   }
 
   return (
-    <View style={styles.container}>
-      {isAuthenticated && user ? <MainApp /> : <AuthScreen />}
-    </View>
+    <View style={styles.container}>{isAuthenticated && user ? <MainApp /> : <AuthScreen />}</View>
   )
 }
 

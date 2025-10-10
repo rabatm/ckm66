@@ -20,10 +20,7 @@ export async function updateProfile(userId: string, data: ProfileUpdateData): Pr
 
   if (existingProfile) {
     // Profile exists, just update
-    const { error } = await supabase
-      .from('profiles')
-      .update(data)
-      .eq('id', userId)
+    const { error } = await supabase.from('profiles').update(data).eq('id', userId)
 
     if (error) {
       console.error('Error updating profile:', error)
@@ -68,7 +65,7 @@ async function compressImage(uri: string): Promise<{ uri: string; base64?: strin
     return manipResult
   } catch (error) {
     console.error('Error compressing image:', error)
-    throw new Error('Impossible de compresser l\'image')
+    throw new Error("Impossible de compresser l'image")
   }
 }
 
@@ -109,13 +106,11 @@ export async function uploadProfilePicture(userId: string, imageUri: string): Pr
 
     if (uploadError) {
       console.error('Error uploading image:', uploadError)
-      throw new Error('Impossible de télécharger l\'image')
+      throw new Error("Impossible de télécharger l'image")
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('profile-pictures')
-      .getPublicUrl(filePath)
+    const { data: urlData } = supabase.storage.from('profile-pictures').getPublicUrl(filePath)
 
     const publicUrl = urlData.publicUrl
 
@@ -142,9 +137,7 @@ export async function deleteProfilePicture(userId: string, pictureUrl: string): 
     if (!filePath) return
 
     // Delete from storage
-    const { error } = await supabase.storage
-      .from('profile-pictures')
-      .remove([filePath])
+    const { error } = await supabase.storage.from('profile-pictures').remove([filePath])
 
     if (error) {
       console.error('Error deleting old picture:', error)

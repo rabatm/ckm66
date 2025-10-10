@@ -10,11 +10,7 @@ interface DarkHeaderProps {
   showLogo?: boolean
 }
 
-export const DarkHeader: React.FC<DarkHeaderProps> = ({
-  title,
-  subtitle,
-  showLogo = true,
-}) => {
+export const DarkHeader: React.FC<DarkHeaderProps> = ({ title, subtitle, showLogo = true }) => {
   return (
     <LinearGradient
       colors={[colors.primary[500], colors.primary[600]]}
@@ -25,14 +21,22 @@ export const DarkHeader: React.FC<DarkHeaderProps> = ({
       <View style={styles.content}>
         {showLogo && (
           <View style={styles.logoContainer}>
-            <Ionicons name="chevron-back" size={28} color={colors.text.primary} style={styles.chevronIcon} />
-            <Ionicons name="chevron-back" size={28} color={colors.text.primary} style={styles.chevronIcon} />
+            <Ionicons
+              name="chevron-back"
+              size={28}
+              color={colors.text.primary}
+              style={styles.chevronIcon}
+            />
+            <Ionicons
+              name="chevron-back"
+              size={28}
+              color={colors.text.primary}
+              style={styles.chevronIcon}
+            />
             <Text style={styles.title}>{title}</Text>
           </View>
         )}
-        {!showLogo && (
-          <Text style={styles.title}>{title}</Text>
-        )}
+        {!showLogo && <Text style={styles.title}>{title}</Text>}
         {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       </View>
     </LinearGradient>

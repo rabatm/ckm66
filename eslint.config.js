@@ -23,6 +23,8 @@ export default [
         __filename: 'readonly',
         global: 'readonly',
         Buffer: 'readonly',
+        require: 'readonly', // Allow require for React Native image imports
+        module: 'readonly',
         describe: 'readonly',
         it: 'readonly',
         expect: 'readonly',

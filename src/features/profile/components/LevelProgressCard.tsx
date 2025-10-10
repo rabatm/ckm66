@@ -23,9 +23,7 @@ export function LevelProgressCard({ userProgress }: LevelProgressCardProps) {
           <Text style={[styles.levelTitle, { color: userProgress.level_info.color }]}>
             {userProgress.level_info.title}
           </Text>
-          <Text style={styles.levelPoints}>
-            {userProgress.total_points} points
-          </Text>
+          <Text style={styles.levelPoints}>{userProgress.total_points} points</Text>
         </View>
       </View>
 
@@ -48,7 +46,8 @@ export function LevelProgressCard({ userProgress }: LevelProgressCardProps) {
             </Text>
           </View>
           <Text style={styles.motivationText}>
-            Plus que {userProgress.points_to_next_level} pts pour passer {userProgress.next_level_info.title} !
+            Plus que {userProgress.points_to_next_level} pts pour passer{' '}
+            {userProgress.next_level_info.title} !
           </Text>
         </>
       )}

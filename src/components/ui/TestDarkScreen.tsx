@@ -19,10 +19,7 @@ export const TestDarkScreen = () => {
 
   return (
     <View style={styles.container}>
-      <DarkHeader
-        title="KRAV MAGA"
-        subtitle="Bonjour Martin 👋"
-      />
+      <DarkHeader title="KRAV MAGA" subtitle="Bonjour Martin 👋" />
 
       <ScrollView style={styles.scrollView}>
         {/* Login Section */}
@@ -48,11 +45,7 @@ export const TestDarkScreen = () => {
               icon={<Text style={styles.inputIcon}>🔒</Text>}
             />
 
-            <DarkButton
-              variant="primary"
-              onPress={handleLogin}
-              loading={loading}
-            >
+            <DarkButton variant="primary" onPress={handleLogin} loading={loading}>
               Se connecter →
             </DarkButton>
 
@@ -98,9 +91,7 @@ export const TestDarkScreen = () => {
 
           <DarkCard>
             <Text style={styles.cardTitle}>Card Standard</Text>
-            <Text style={styles.cardText}>
-              Ceci est une card dark avec padding par défaut
-            </Text>
+            <Text style={styles.cardText}>Ceci est une card dark avec padding par défaut</Text>
           </DarkCard>
 
           <View style={{ height: spacing.md }} />
