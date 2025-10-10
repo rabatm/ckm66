@@ -34,10 +34,12 @@ export const MainApp = () => {
     <View style={styles.container}>
       {/* Glass App Header */}
       <DarkAppHeader
-        firstName={user?.first_name}
-        profilePictureUrl={user?.profile_picture_url}
-        level={userProgress?.current_level}
-        totalPoints={userProgress?.total_points}
+        {...(user?.first_name ? { firstName: user.first_name } : {})}
+        {...(user?.profile_picture_url ? { profilePictureUrl: user.profile_picture_url } : {})}
+        {...(userProgress?.current_level ? { level: userProgress.current_level } : {})}
+        {...(userProgress?.total_points !== undefined
+          ? { totalPoints: userProgress.total_points }
+          : {})}
       />
 
       {/* Tab Content */}
