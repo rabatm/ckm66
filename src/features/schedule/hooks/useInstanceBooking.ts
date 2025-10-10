@@ -45,7 +45,7 @@ export function useInstanceBooking() {
           : 'Réservation confirmée !'
       )
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Booking error:', error)
       Alert.alert('Erreur', error.message || 'Impossible de réserver ce cours')
     },
@@ -76,7 +76,7 @@ export function useCancelInstanceBooking() {
 
       Alert.alert('Annulation confirmée', `Votre réservation a été annulée.${refundMessage}`)
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Cancellation error:', error)
       Alert.alert('Erreur', error.message || "Impossible d'annuler la réservation")
     },

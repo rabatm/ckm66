@@ -22,6 +22,8 @@ import {
 import { InstanceCard, BookingConfirmModal, WeekNavigator } from '../components'
 import type { CourseInstanceWithDetails } from '../types'
 import { useSubscription } from '@/features/profile/hooks/useSubscription'
+import { addEventToCalendar, createCalendarEventFromReservation } from '@/utils/calendarUtils'
+import type { Course } from '../types'
 
 export const ScheduleScreen = () => {
   const { user } = useAuth()
@@ -126,6 +128,17 @@ export const ScheduleScreen = () => {
         subscription_id: subscriptionInfo.subscription.id,
       })
 
+      // Add event to calendar after successful booking
+      const courseTitle = selectedInstance.course?.title || 'Cours'
+      const calendarEvent = createCalendarEventFromReservation(
+        courseTitle,
+        selectedInstance.instance_date,
+        selectedInstance.start_time,
+        selectedInstance.end_time,
+        selectedInstance.location
+      )
+      await addEventToCalendar(calendarEvent)
+
       setShowBookingModal(false)
       setSelectedInstance(null)
     } catch (error) {
@@ -214,7 +227,9 @@ export const ScheduleScreen = () => {
                   <InstanceCard
                     key={instance.id}
                     instance={instance}
-                    {...(instance.user_reservation ? { onCancel: () => handleCancelReservation(instance) } : { onBook: () => handleBookInstance(instance) })}
+                    {...(instance.user_reservation
+                      ? { onCancel: () => handleCancelReservation(instance) }
+                      : { onBook: () => handleBookInstance(instance) })}
                     showDate={true}
                   />
                 ))
@@ -230,9 +245,7 @@ export const ScheduleScreen = () => {
           {/* Planning Tab */}
           <TouchableOpacity style={styles.bottomMenuItem} activeOpacity={0.7}>
             <Ionicons name="calendar" size={24} color={colors.primary[500]} />
-            <Text style={[styles.bottomMenuItemText, { color: colors.primary[500] }]}>
-              Cours
-            </Text>
+            <Text style={[styles.bottomMenuItemText, { color: colors.primary[500] }]}>Cours</Text>
           </TouchableOpacity>
 
           {/* Badges Tab */}
@@ -307,7 +320,7 @@ export const ScheduleScreen = () => {
                 max_capacity: selectedInstance.max_capacity,
                 current_reservations: selectedInstance.current_reservations,
                 is_full: selectedInstance.is_full,
-              } as any)
+              } as Course)
             : null
         }
         subscription={subscriptionInfo?.subscription || null}
