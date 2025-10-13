@@ -172,7 +172,6 @@ export const ScheduleScreen = () => {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{
-          paddingTop: spacing.xl,
           paddingBottom: Math.max(insets.bottom + 120, spacing['5xl'] + 60),
         }}
         refreshControl={
