@@ -185,7 +185,7 @@ export const ScheduleScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Week Navigator */}
-        <View style={styles.section}>
+        <View style={styles.weekNavigatorContainer}>
           <WeekNavigator
             weekStart={currentWeekStart}
             onPreviousWeek={handlePreviousWeek}
@@ -276,6 +276,11 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  weekNavigatorContainer: {
+    paddingHorizontal: spacing.xl,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
   },
   section: {
     paddingHorizontal: spacing.xl,
