@@ -110,13 +110,17 @@ export const ReservationsScreen = () => {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{
-          paddingTop: insets.top,
+          paddingTop: 4,
           paddingBottom: Math.max(insets.bottom + 120, spacing['5xl'] + 60),
         }}
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Mes réservations</Text>
+          <View style={styles.headerContent}>
+            <Ionicons name="calendar-outline" size={24} color={colors.primary[500]} />
+            <Text style={styles.title}>Mes réservations</Text>
+          </View>
+          <Text style={styles.subtitle}>Gérez vos cours réservés</Text>
         </View>
 
         {/* Upcoming Reservations */}
@@ -173,12 +177,36 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
     marginBottom: spacing.xl,
+    backgroundColor: colors.background.secondary,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border.dark,
+    shadowColor: colors.primary[500],
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+    gap: spacing.sm,
   },
   title: {
     fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
     color: colors.primary[500],
+  },
+  subtitle: {
+    fontSize: typography.sizes.sm,
+    color: colors.text.secondary,
+    fontWeight: typography.weights.medium,
   },
   section: {
     paddingHorizontal: spacing.xl,
