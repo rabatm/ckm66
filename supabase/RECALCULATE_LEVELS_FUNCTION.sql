@@ -11,8 +11,15 @@ BEGIN
   JOIN badges b ON b.id = ub.badge_id
   WHERE ub.user_id = p_user_id;
 
-  -- Calculate current level
-  v_current_level := calculate_level(v_total_points);
+  -- Calculate current level with new thresholds
+  IF v_total_points >= 3601 THEN v_current_level := 7; -- Légende
+  ELSIF v_total_points >= 2401 THEN v_current_level := 6; -- Maître
+  ELSIF v_total_points >= 1501 THEN v_current_level := 5; -- Expert
+  ELSIF v_total_points >= 901 THEN v_current_level := 4; -- Confirmé
+  ELSIF v_total_points >= 451 THEN v_current_level := 3; -- Pratiquant
+  ELSIF v_total_points >= 151 THEN v_current_level := 2; -- Apprenti
+  ELSE v_current_level := 1; -- Débutant
+  END IF;
 
   -- Update profile
   UPDATE profiles
@@ -31,7 +38,7 @@ RETURNS VOID AS $$
 DECLARE
   v_profile RECORD;
 BEGIN
-  RAISE NOTICE 'Starting recalculation of all user levels...';
+  RAISE NOTICE 'Starting recalculation of all user levels with new thresholds...';
 
   FOR v_profile IN SELECT id, first_name, last_name FROM profiles
   LOOP
