@@ -7,18 +7,11 @@ import {
   ActivityIndicator,
   StyleSheet,
   Alert,
-  TouchableOpacity,
-  Modal,
 } from 'react-native'
-import { SimpleLineIcons, Ionicons } from '@expo/vector-icons'
+import { SimpleLineIcons } from '@expo/vector-icons'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { colors, spacing, typography } from '@/theme'
-import {
-  useInstances,
-  useInstanceBooking,
-  useCancelInstanceBooking,
-  useReservations,
-} from '../hooks'
+import { useInstances, useInstanceBooking, useCancelInstanceBooking } from '../hooks'
 import { InstanceCard, BookingConfirmModal, WeekNavigator } from '../components'
 import type { CourseInstanceWithDetails } from '../types'
 import { useSubscription } from '@/features/profile/hooks/useSubscription'
@@ -29,7 +22,6 @@ export const ScheduleScreen = () => {
   const { user } = useAuth()
   const [selectedInstance, setSelectedInstance] = useState<CourseInstanceWithDetails | null>(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
-  const [showReservationsModal, setShowReservationsModal] = useState(false)
 
   // Week navigation state
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -69,9 +61,6 @@ export const ScheduleScreen = () => {
   const { subscriptionInfo } = useSubscription()
   const bookingMutation = useInstanceBooking()
   const cancelMutation = useCancelInstanceBooking()
-  const { data: reservations } = useReservations(user?.id || '')
-
-  const totalReservations = reservations?.length || 0
 
   const isRefreshing = isLoading
 
@@ -109,7 +98,13 @@ export const ScheduleScreen = () => {
 
   // Handlers
   const handleBookInstance = (instance: CourseInstanceWithDetails) => {
-    if (!user?.id || !subscriptionInfo?.subscription) {
+    if (!user?.id) {
+      Alert.alert('Erreur', 'Vous devez être connecté pour réserver un cours')
+      return
+    }
+
+    // For non-guests, check if they have a subscription
+    if (user.role !== 'guest' && !subscriptionInfo?.subscription) {
       Alert.alert('Erreur', 'Vous devez avoir un abonnement actif pour réserver un cours')
       return
     }
@@ -119,13 +114,13 @@ export const ScheduleScreen = () => {
   }
 
   const handleConfirmBooking = async () => {
-    if (!user?.id || !selectedInstance || !subscriptionInfo?.subscription) return
+    if (!user?.id || !selectedInstance) return
 
     try {
       await bookingMutation.mutateAsync({
         user_id: user.id,
         course_instance_id: selectedInstance.id,
-        subscription_id: subscriptionInfo.subscription.id,
+        subscription_id: user.role === 'guest' ? null : subscriptionInfo?.subscription?.id || null,
       })
 
       // Add event to calendar after successful booking
@@ -239,72 +234,6 @@ export const ScheduleScreen = () => {
         )}
       </ScrollView>
 
-      {/* Bottom Menu */}
-      <View style={styles.bottomMenu}>
-        <View style={styles.bottomMenuContainer}>
-          {/* Planning Tab */}
-          <TouchableOpacity style={styles.bottomMenuItem} activeOpacity={0.7}>
-            <Ionicons name="calendar" size={24} color={colors.primary[500]} />
-            <Text style={[styles.bottomMenuItemText, { color: colors.primary[500] }]}>Cours</Text>
-          </TouchableOpacity>
-
-          {/* Badges Tab */}
-          <TouchableOpacity style={styles.bottomMenuItem} activeOpacity={0.7}>
-            <Ionicons name="medal" size={24} color={colors.text.secondary} />
-            <Text style={styles.bottomMenuItemText}>Badges</Text>
-          </TouchableOpacity>
-
-          {/* Reservations Tab */}
-          <TouchableOpacity
-            style={styles.bottomMenuItem}
-            onPress={() => setShowReservationsModal(true)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.reservationIconContainer}>
-              <Ionicons name="list" size={24} color={colors.text.secondary} />
-              {totalReservations > 0 && (
-                <View style={styles.reservationBadge}>
-                  <Text style={styles.reservationBadgeText}>{totalReservations}</Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.bottomMenuItemText}>Réservations</Text>
-          </TouchableOpacity>
-
-          {/* Profile Tab */}
-          <TouchableOpacity style={styles.bottomMenuItem} activeOpacity={0.7}>
-            <Ionicons name="person" size={24} color={colors.text.secondary} />
-            <Text style={styles.bottomMenuItemText}>Profil</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Reservations Modal */}
-      <Modal
-        visible={showReservationsModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowReservationsModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Mes réservations</Text>
-            <TouchableOpacity
-              onPress={() => setShowReservationsModal(false)}
-              style={styles.modalCloseButton}
-            >
-              <Ionicons name="close" size={24} color={colors.text.primary} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            <View style={styles.emptyReservations}>
-              <Text style={styles.emptyReservationsText}>Fonctionnalité en développement</Text>
-            </View>
-          </ScrollView>
-        </View>
-      </Modal>
-
       {/* Booking Confirmation Modal */}
       <BookingConfirmModal
         visible={showBookingModal}
@@ -391,128 +320,8 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: spacing.xs,
   },
-  bottomMenu: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.background.secondary,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.dark,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-  },
-  bottomMenuContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  bottomMenuItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    minWidth: 80,
-  },
-  bottomMenuItemText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.medium,
-    color: colors.text.secondary,
-    marginTop: spacing.xs,
-  },
-  reservationIconContainer: {
-    position: 'relative',
-  },
-  reservationBadge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: colors.secondary[500],
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reservationBadgeText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.text.primary,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.dark,
-  },
-  modalTitle: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.bold,
-    color: colors.text.primary,
-  },
-  modalCloseButton: {
-    padding: spacing.sm,
-  },
-  modalContent: {
-    flex: 1,
-  },
-  reservationSection: {
-    padding: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.dark,
-  },
-  reservationSectionTitle: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-    color: colors.primary[500],
-    marginBottom: spacing.md,
-  },
-  reservationItem: {
-    backgroundColor: colors.background.secondary,
-    padding: spacing.md,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border.dark,
-  },
-  reservationTitle: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: colors.text.primary,
-    marginBottom: 4,
-  },
-  reservationDate: {
-    fontSize: typography.sizes.sm,
-    color: colors.primary[500],
-    marginBottom: 2,
-  },
-  reservationLocation: {
-    fontSize: typography.sizes.sm,
-    color: colors.text.secondary,
-    marginBottom: 4,
-  },
-  reservationStatus: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.success,
-  },
-  emptyReservations: {
-    padding: spacing['2xl'],
-    alignItems: 'center',
-  },
   emptyText: {
     fontSize: typography.sizes.sm,
-    color: colors.text.secondary,
-    textAlign: 'center',
-  },
-  emptyReservationsText: {
-    fontSize: typography.sizes.base,
     color: colors.text.secondary,
     textAlign: 'center',
   },

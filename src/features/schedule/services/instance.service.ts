@@ -15,7 +15,7 @@ export class InstanceService {
     userId?: string
   ): Promise<CourseInstanceWithDetails[]> {
     try {
-      // Query course_instances for recurring course instances
+      // Query all course instances (now includes both regular and one-time courses)
       let instancesQuery = supabase
         .from('course_instances')
         .select(
@@ -29,7 +29,7 @@ export class InstanceService {
         .order('instance_date', { ascending: true })
         .order('start_time', { ascending: true })
 
-      // Apply filters to instances
+      // Apply filters
       if (filters?.courseId) {
         instancesQuery = instancesQuery.eq('course_id', filters.courseId)
       }
@@ -54,74 +54,35 @@ export class InstanceService {
 
       if (instancesError) throw instancesError
 
-      // Get one-time courses from courses table where course_type = 'one_time'
-      let oneTimeCoursesQuery = supabase
-        .from('courses')
-        .select('*')
-        .eq('course_type', 'one_time')
-        .eq('is_active', true)
-
-      // Apply date filters
-      if (filters?.startDate) {
-        oneTimeCoursesQuery = oneTimeCoursesQuery.gte('one_time_date', filters.startDate)
-      }
-
-      if (filters?.endDate) {
-        oneTimeCoursesQuery = oneTimeCoursesQuery.lte('one_time_date', filters.endDate)
-      }
-
-      // Apply filters
-      if (filters?.location) {
-        oneTimeCoursesQuery = oneTimeCoursesQuery.ilike('location', `%${filters.location}%`)
-      }
-
-      const { data: oneTimeCourses, error: oneTimeError } = await oneTimeCoursesQuery
-
-      if (oneTimeError) throw oneTimeError
-
-      // Transform one-time courses to match CourseInstanceWithDetails interface
-      const transformedOneTimeCourses: CourseInstanceWithDetails[] = (oneTimeCourses || []).map(
-        (course) => ({
-          id: course.id, // Use course ID as instance ID for one-time courses
-          course_id: course.id,
-          instance_date: course.one_time_date!,
-          start_time: course.start_time,
-          end_time: course.end_time,
-          duration_minutes: course.duration_minutes,
-          max_capacity: course.max_capacity,
-          current_reservations: course.current_reservations || 0,
-          instructor_id: course.instructor_id,
-          backup_instructor_id: course.backup_instructor_id,
-          location: course.location,
-          status: 'scheduled' as InstanceStatus,
-          cancellation_reason: null,
-          is_exceptional: false,
-          is_one_time: true,
-          one_time_title: course.title,
-          one_time_description: course.description,
-          one_time_max_participants: course.max_capacity,
-          notes: null,
-          created_at: course.created_at || new Date().toISOString(),
-          updated_at: course.updated_at || new Date().toISOString(),
-          course: {
-            id: course.id,
-            title: course.title,
-            description: course.description,
-            level: course.level,
-          },
-          instructor: null, // TODO: Fetch instructor data separately
-          available_spots: course.max_capacity - (course.current_reservations || 0),
-          is_full: (course.current_reservations || 0) >= course.max_capacity,
-          user_reservation: null, // Will be set below if userId provided
-        })
-      )
-
-      // Combine both types of instances
-      const allInstances = [...(instances || []), ...transformedOneTimeCourses]
+      // Enrich instances with available_spots and is_full
+      const enrichedInstances: CourseInstanceWithDetails[] = (instances || []).map((instance) => {
+        const { course, instructor, ...instanceWithoutCourse } = instance
+        const availableSpots = instance.max_capacity - instance.current_reservations
+        const result = {
+          ...instanceWithoutCourse,
+          status: instance.status as InstanceStatus,
+          is_exceptional: instance.is_exceptional || false,
+          is_one_time: instance.is_one_time || false,
+          available_spots: availableSpots,
+          is_full: availableSpots <= 0,
+        } as CourseInstanceWithDetails
+        if (course) {
+          result.course = course
+        }
+        if (instructor && typeof instructor === 'object' && 'id' in instructor) {
+          result.instructor = instructor as {
+            id: string
+            first_name: string
+            last_name: string
+            profile_picture_url: string | null
+          }
+        }
+        return result as CourseInstanceWithDetails
+      })
 
       // Enrich all instances with user reservations if userId provided
-      const enrichedInstances: CourseInstanceWithDetails[] = await Promise.all(
-        allInstances.map(async (instance) => {
+      const enrichedInstancesWithReservations: CourseInstanceWithDetails[] = await Promise.all(
+        enrichedInstances.map(async (instance) => {
           // Get user's reservation for this instance if userId provided
           let userReservation = null
           if (userId) {
@@ -137,10 +98,10 @@ export class InstanceService {
 
       // Filter by availability if requested
       if (filters?.availableOnly) {
-        return enrichedInstances.filter((instance) => !instance.is_full)
+        return enrichedInstancesWithReservations.filter((instance) => !instance.is_full)
       }
 
-      return enrichedInstances
+      return enrichedInstancesWithReservations
     } catch (error) {
       console.error('Error fetching instances:', error)
       throw error
@@ -172,17 +133,29 @@ export class InstanceService {
 
       // Use one_time_max_participants if it's a one-time course
       const maxCapacity =
-        (instance as any).is_one_time && (instance as any).one_time_max_participants !== null
-          ? (instance as any).one_time_max_participants
+        (instance as { is_one_time?: boolean }).is_one_time &&
+        (instance as { one_time_max_participants?: number | null }).one_time_max_participants !==
+          null
+          ? (instance as { one_time_max_participants: number }).one_time_max_participants
           : instance.max_capacity
 
       const availableSpots = maxCapacity - instance.current_reservations
 
-      return {
+      const result = {
         ...instance,
         available_spots: availableSpots,
         is_full: availableSpots <= 0,
       }
+
+      // Remove course if it's null
+      if (!instance.course) {
+        const resultWithoutCourse = Object.fromEntries(
+          Object.entries(result).filter(([key]) => key !== 'course')
+        )
+        return resultWithoutCourse as unknown as CourseInstanceWithDetails
+      }
+
+      return result as unknown as CourseInstanceWithDetails
     } catch (error) {
       console.error('Error fetching instance:', error)
       throw error
@@ -195,13 +168,13 @@ export class InstanceService {
   static async getUserReservationForInstance(
     userId: string,
     instanceId: string
-  ): Promise<any | null> {
+  ): Promise<{ id: string; status: string; waiting_list_position?: number | null } | null> {
     try {
       const { data, error } = await supabase
         .from('reservations')
         .select('id, status, waiting_list_position')
         .eq('user_id', userId)
-        .or(`course_instance_id.eq.${instanceId},course_id.eq.${instanceId}`)
+        .eq('course_instance_id', instanceId)
         .in('status', ['confirmed', 'waiting_list', 'cancelled'])
         .maybeSingle()
 
@@ -216,7 +189,7 @@ export class InstanceService {
   /**
    * Get instance reservations (for attendance list)
    */
-  static async getInstanceReservations(instanceId: string): Promise<any[]> {
+  static async getInstanceReservations(instanceId: string) {
     try {
       const { data, error } = await supabase
         .from('reservations')
@@ -226,7 +199,7 @@ export class InstanceService {
           user:user_id(id, first_name, last_name, email, profile_picture_url)
         `
         )
-        .or(`course_instance_id.eq.${instanceId},course_id.eq.${instanceId}`)
+        .eq('course_instance_id', instanceId)
         .in('status', ['confirmed', 'waiting_list'])
         .order('status', { ascending: true })
         .order('waiting_list_position', { ascending: true })
@@ -260,7 +233,7 @@ export class InstanceService {
   /**
    * Generate instances for all active courses
    */
-  static async generateAllInstances(weeksAhead: number = 4): Promise<any[]> {
+  static async generateAllInstances(weeksAhead: number = 4) {
     try {
       const { data, error } = await supabase.rpc('generate_all_course_instances', {
         p_weeks_ahead: weeksAhead,

@@ -238,7 +238,7 @@ export function ProfileScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background.primary }}>
       <DarkHeader
         title="KRAV MAGA"
-        subtitle={`Bonjour ${user?.first_name} 👋`}
+        subtitle={`${user?.first_name}`}
       />
 
       <ScrollView>

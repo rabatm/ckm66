@@ -1,5 +1,6 @@
 import type { Tables } from '../../../@types/database.types'
 import type { Course } from './course.types'
+import type { CourseInstance } from './instance.types'
 
 /**
  * Reservation Types
@@ -12,6 +13,7 @@ export type SubscriptionRow = Tables<'subscriptions'>
 export interface Reservation extends ReservationRow {
   course?: Course
   subscription?: SubscriptionRow
+  course_instance?: CourseInstance
 }
 
 export interface CreateReservationData {
@@ -28,7 +30,7 @@ export interface CancelReservationData {
 export interface BookingValidation {
   canBook: boolean
   error?: string
-  subscription?: SubscriptionRow
+  subscription?: SubscriptionRow | null
   requiresPayment?: boolean
 }
 
@@ -49,9 +51,14 @@ export const groupReservationsByStatus = (reservations: Reservation[]): Reservat
       } else if (reservation.status === 'waiting_list') {
         acc.waiting_list.push(reservation)
       } else {
+        // Get the appropriate date for this reservation
         const reservationDate = reservation.reservation_date
           ? new Date(reservation.reservation_date)
-          : new Date()
+          : reservation.course?.one_time_date
+            ? new Date(reservation.course.one_time_date)
+            : reservation.course_instance?.instance_date
+              ? new Date(reservation.course_instance.instance_date)
+              : new Date()
 
         if (reservationDate < now) {
           acc.past.push(reservation)

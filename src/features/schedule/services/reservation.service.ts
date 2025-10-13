@@ -10,7 +10,7 @@ import type { Database } from '../../../@types/database.types'
 export interface CreateInstanceReservationData {
   user_id: string
   course_instance_id: string
-  subscription_id: string
+  subscription_id?: string | null // Make optional for guests
 }
 
 export interface CancelInstanceReservationData {
@@ -27,43 +27,64 @@ export class ReservationService {
     instanceOrCourseId: string
   ): Promise<BookingValidation> {
     try {
-      // 1. Get active subscription
-      const subscription = await this.getActiveSubscription(userId)
+      // 1. Get user profile to check role
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role, free_trials_remaining')
+        .eq('id', userId)
+        .single()
 
-      if (!subscription) {
-        return {
-          canBook: false,
-          error: 'Aucun abonnement actif. Veuillez souscrire à un abonnement.',
-        }
-      }
+      if (profileError) throw profileError
 
-      // 2. Check expiration
-      if (new Date(subscription.end_date) < new Date()) {
-        return {
-          canBook: false,
-          error: 'Votre abonnement a expiré.',
-        }
-      }
-
-      // 3. Check subscription status
-      if (subscription.status !== 'active') {
-        return {
-          canBook: false,
-          error: "Votre abonnement n'est pas actif.",
-        }
-      }
-
-      // 4. Check remaining sessions for session packs
-      if (subscription.type.includes('session_pack')) {
-        if (!subscription.remaining_sessions || subscription.remaining_sessions <= 0) {
+      // 2. Check if user is a guest with free trials
+      if (userProfile?.role === 'guest') {
+        if (!userProfile.free_trials_remaining || userProfile.free_trials_remaining <= 0) {
           return {
             canBook: false,
-            error: "Vous n'avez plus de séances disponibles. Renouvelez votre carnet.",
+            error: "Vous n'avez plus d'essais gratuits disponibles.",
+          }
+        }
+        // For guests, skip subscription validation and go to other checks
+      } else {
+        // For non-guests, check subscription
+        const subscription = await this.getActiveSubscription(userId)
+
+        if (!subscription) {
+          return {
+            canBook: false,
+            error: 'Aucun abonnement actif. Veuillez souscrire à un abonnement.',
+          }
+        }
+
+        console.log('✅ Found active subscription:', subscription.id)
+        // 3. Check expiration
+        if (new Date(subscription.end_date) < new Date()) {
+          return {
+            canBook: false,
+            error: 'Votre abonnement a expiré.',
+          }
+        }
+
+        // 4. Check subscription status
+        if (subscription.status !== 'active') {
+          return {
+            canBook: false,
+            error: "Votre abonnement n'est pas actif.",
+          }
+        }
+
+        // 5. Check remaining sessions for session packs
+        if (subscription.type.includes('session_pack')) {
+          if (!subscription.remaining_sessions || subscription.remaining_sessions <= 0) {
+            return {
+              canBook: false,
+              error: "Vous n'avez plus de séances disponibles. Renouvelez votre carnet.",
+            }
           }
         }
       }
 
-      // 5. Check for existing reservation for this instance/course
+      // 6. Check for existing reservation for this instance/course
       const existingReservation = await this.checkExistingReservation(userId, instanceOrCourseId)
 
       if (existingReservation) {
@@ -82,9 +103,17 @@ export class ReservationService {
         }
       }
 
-      return {
-        canBook: true,
-        subscription,
+      // Return success with subscription for non-guests
+      if (userProfile?.role !== 'guest') {
+        const subscription = await this.getActiveSubscription(userId)
+        return {
+          canBook: true,
+          subscription,
+        }
+      } else {
+        return {
+          canBook: true,
+        }
       }
     } catch (error) {
       console.error('Error validating booking:', error)
@@ -100,83 +129,66 @@ export class ReservationService {
    */
   static async createReservation(data: CreateInstanceReservationData): Promise<Reservation> {
     try {
-      const { user_id, course_instance_id, subscription_id } = data
+      const { user_id, course_instance_id, subscription_id } = data // subscription_id is now optional
 
-      // First, try to get instance details from course_instances table
-      let instance = null
-      let isOneTimeCourse = false
-      let courseId = null
+      // Get user profile to check role
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user_id)
+        .single()
 
-      const { data: instanceData } = await supabase
+      if (profileError) throw profileError
+
+      const isGuest = userProfile?.role === 'guest'
+
+      // Get instance details from course_instances table (now all courses have instances)
+      const { data: instanceData, error: instanceError } = await supabase
         .from('course_instances')
         .select('*')
         .eq('id', course_instance_id)
-        .maybeSingle()
+        .single()
 
-      if (instanceData) {
-        instance = instanceData
-        isOneTimeCourse = instanceData.is_one_time || false
-      } else {
-        // Check if this is a one-time course ID from courses table
-        const { data: courseData } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('id', course_instance_id)
-          .eq('course_type', 'one_time')
-          .maybeSingle()
-
-        if (courseData) {
-          // This is a one-time course, create instance-like data from course
-          instance = {
-            id: courseData.id,
-            course_id: courseData.id,
-            instance_date: courseData.one_time_date!,
-            start_time: courseData.start_time,
-            end_time: courseData.end_time,
-            duration_minutes: courseData.duration_minutes,
-            max_capacity: courseData.max_capacity,
-            current_reservations: courseData.current_reservations || 0,
-            instructor_id: courseData.instructor_id,
-            backup_instructor_id: courseData.backup_instructor_id,
-            location: courseData.location,
-            status: 'scheduled',
-            cancellation_reason: null,
-            is_exceptional: false,
-            is_one_time: true,
-            notes: null,
-            created_at: courseData.created_at,
-            updated_at: courseData.updated_at,
-          }
-          isOneTimeCourse = true
-          courseId = courseData.id
-        } else {
-          throw new Error('Cours introuvable')
-        }
+      if (instanceError || !instanceData) {
+        throw new Error('Cours introuvable')
       }
+
+      const instance = instanceData
 
       // Determine if instance is full
       const isInstanceFull = instance.current_reservations >= instance.max_capacity
       const status = isInstanceFull ? 'waiting_list' : 'confirmed'
 
-      // Get subscription
-      const { data: subscription, error: subError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('id', subscription_id)
-        .single()
+      let subscription = null
+      if (!isGuest && subscription_id) {
+        // Get subscription for non-guests
+        const { data: subscriptionData, error: subError } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('id', subscription_id)
+          .single()
 
-      if (subError) throw subError
+        if (subError) throw subError
+        subscription = subscriptionData
+      }
 
       // Prepare reservation data
       let sessionDeducted = false
       let sessionsDeducted = 0
+      let isFreeTrial = false
       let waitingListPosition = null
 
-      // Only deduct session if confirmed (not waiting list)
-      if (status === 'confirmed' && subscription.type.includes('session_pack')) {
-        await this.decrementSession(subscription_id)
-        sessionDeducted = true
-        sessionsDeducted = 1
+      // Only deduct session if confirmed and not a guest
+      if (status === 'confirmed') {
+        if (isGuest) {
+          // For guests, mark as free trial (trigger will handle decrementing)
+          isFreeTrial = true
+        } else if (subscription && subscription.type.includes('session_pack')) {
+          // For non-guests with session packs, deduct session
+          await this.decrementSession(subscription.id)
+          sessionDeducted = true
+          sessionsDeducted = 1
+        }
       }
 
       // Get waiting list position if applicable
@@ -184,25 +196,18 @@ export class ReservationService {
         waitingListPosition = await this.getNextWaitingListPosition(course_instance_id)
       }
 
-      // Create reservation
+      // Create reservation - always use course_instance_id now
       const reservationData: Partial<Database['public']['Tables']['reservations']['Insert']> = {
         user_id,
-        subscription_id,
+        course_instance_id,
+        subscription_id: isGuest ? null : subscription_id || null,
         status,
         session_deducted: sessionDeducted,
         sessions_deducted: sessionsDeducted,
+        is_free_trial: isFreeTrial,
         reservation_date: instance.instance_date,
         reserved_at: status === 'confirmed' ? new Date().toISOString() : null,
         waiting_list_position: waitingListPosition,
-      }
-
-      // Set course_id or course_instance_id based on type
-      if (isOneTimeCourse) {
-        reservationData.course_id = courseId || course_instance_id
-        reservationData.course_instance_id = null
-      } else {
-        reservationData.course_instance_id = course_instance_id
-        reservationData.course_id = null
       }
 
       const { data: reservation, error: reservationError } = await supabase
@@ -215,11 +220,7 @@ export class ReservationService {
 
       // Increment reservations count if confirmed
       if (status === 'confirmed') {
-        if (isOneTimeCourse) {
-          await this.incrementCourseReservations(course_instance_id)
-        } else {
-          await this.incrementInstanceReservations(course_instance_id)
-        }
+        await this.incrementInstanceReservations(course_instance_id)
       }
 
       return reservation
@@ -249,38 +250,14 @@ export class ReservationService {
         throw new Error('Réservation introuvable')
       }
 
-      // Determine if this is a one-time course or regular instance
-      let isOneTimeCourse = false
-      let courseInstance = reservation.course_instance
-      let courseDate: string | null = null
-      let courseStartTime: string | null = null
-      let instanceId = reservation.course_instance_id
-
-      if (courseInstance) {
-        // Regular course instance
-        courseDate = courseInstance.instance_date
-        courseStartTime = courseInstance.start_time
-        isOneTimeCourse = courseInstance.is_one_time || false
-      } else if (reservation.course_id) {
-        // One-time course - get details from courses table
-        const { data: courseData, error: courseError } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('id', reservation.course_id)
-          .eq('course_type', 'one_time')
-          .single()
-
-        if (courseError || !courseData) {
-          throw new Error('Cours introuvable')
-        }
-
-        courseDate = courseData.one_time_date
-        courseStartTime = courseData.start_time
-        isOneTimeCourse = true
-        instanceId = reservation.course_id // Use course_id as instance ID for one-time courses
-      } else {
+      // Get instance details
+      const courseInstance = reservation.course_instance
+      if (!courseInstance) {
         throw new Error('Cours introuvable')
       }
+
+      const courseDate = courseInstance.instance_date
+      const courseStartTime = courseInstance.start_time
 
       if (!courseDate || !courseStartTime) {
         throw new Error('Cours introuvable')
@@ -320,15 +297,23 @@ export class ReservationService {
         await this.refundSessions(reservation.subscription_id, refundAmount)
       }
 
-      // Decrement reservations count if was confirmed
-      if (reservation.status === 'confirmed' && instanceId) {
-        if (isOneTimeCourse) {
-          await this.decrementCourseReservations(instanceId)
-        } else {
-          await this.decrementInstanceReservations(instanceId)
+      // Refund free trial if applicable (for confirmed free trial reservations)
+      if (reservation.status === 'confirmed' && reservation.is_free_trial && reservation.user_id) {
+        // Check cancellation timing (same logic as sessions)
+        const instanceDateTime = new Date(`${courseDate}T${courseStartTime}`)
+        const now = new Date()
+        const hoursUntilCourse = (instanceDateTime.getTime() - now.getTime()) / (1000 * 60 * 60)
+
+        if (hoursUntilCourse >= 2) {
+          await this.refundFreeTrial(reservation.user_id)
         }
+      }
+
+      // Decrement reservations count if was confirmed
+      if (reservation.status === 'confirmed' && reservation.course_instance_id) {
+        await this.decrementInstanceReservations(reservation.course_instance_id)
         // Promote from waiting list
-        await this.promoteFromWaitingList(instanceId)
+        await this.promoteFromWaitingList(reservation.course_instance_id)
       }
 
       return updatedReservation
@@ -343,26 +328,61 @@ export class ReservationService {
    */
   static async getUserReservations(userId: string): Promise<Reservation[]> {
     try {
-      const { data, error } = await supabase
+      // First get reservations
+      const { data: reservations, error: reservationsError } = await supabase
         .from('reservations')
         .select(
           `
-          *,
+          id, user_id, course_id, course_instance_id, subscription_id, status,
+          reservation_date, reserved_at, cancelled_at, cancellation_reason,
+          session_deducted, sessions_deducted, refund_amount, promoted_at,
+          attended, check_in_time, check_out_time, notes, created_at, updated_at,
           course_instance:course_instance_id(*,
             course:course_id(id, title, description, level)
           ),
-          course:course_id(id, title, description, level, course_type, one_time_date, start_time, end_time, location),
-          subscription:subscription_id(*)
+          course:course_id(id, title, description, level, course_type, one_time_date, start_time, end_time, location)
         `
         )
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
-      return (data || []).map((reservation) => ({
+      if (reservationsError) throw reservationsError
+
+      // If we have reservations, get their subscriptions separately
+      if (reservations && reservations.length > 0) {
+        const subscriptionIds = reservations
+          .map((r) => r.subscription_id)
+          .filter((id) => id !== null && id !== undefined)
+
+        if (subscriptionIds.length > 0) {
+          const { data: subscriptions, error: subscriptionsError } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .in('id', subscriptionIds)
+
+          if (subscriptionsError) {
+            console.warn('Error fetching subscriptions:', subscriptionsError)
+          }
+
+          const subscriptionMap = new Map(subscriptions?.map((sub) => [sub.id, sub]) || [])
+
+          return reservations.map((reservation) => ({
+            ...reservation,
+            course: reservation.course || undefined,
+            course_instance: reservation.course_instance || undefined,
+            subscription: reservation.subscription_id
+              ? subscriptionMap.get(reservation.subscription_id) || undefined
+              : undefined,
+          })) as unknown as Reservation[]
+        }
+      }
+
+      return (reservations || []).map((reservation) => ({
         ...reservation,
-        subscription: reservation.subscription || undefined,
-      }))
+        course: reservation.course || undefined,
+        course_instance: reservation.course_instance || undefined,
+        subscription: undefined,
+      })) as unknown as Reservation[]
     } catch (error) {
       console.error('Error fetching user reservations:', error)
       throw error
@@ -400,7 +420,7 @@ export class ReservationService {
     instanceOrCourseId: string
   ): Promise<{ id: string; status: string } | null> {
     try {
-      // Check for existing reservation in course_instances
+      // Check for existing reservation in course_instances (now all courses use course_instance_id)
       const { data: instanceReservation } = await supabase
         .from('reservations')
         .select('id, status')
@@ -411,19 +431,6 @@ export class ReservationService {
 
       if (instanceReservation) {
         return instanceReservation
-      }
-
-      // Check for existing reservation in courses (one-time courses)
-      const { data: courseReservation } = await supabase
-        .from('reservations')
-        .select('id, status')
-        .eq('user_id', userId)
-        .eq('course_id', instanceOrCourseId)
-        .in('status', ['confirmed', 'waiting_list', 'completed', 'cancelled'])
-        .maybeSingle()
-
-      if (courseReservation) {
-        return courseReservation
       }
 
       return null
@@ -490,6 +497,35 @@ export class ReservationService {
   }
 
   /**
+   * Refund free trial
+   */
+  private static async refundFreeTrial(userId: string): Promise<void> {
+    try {
+      // Get current free trials
+      const { data: profile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('free_trials_remaining')
+        .eq('id', userId)
+        .eq('role', 'guest')
+        .single()
+
+      if (fetchError) throw fetchError
+
+      const newCount = (profile.free_trials_remaining || 0) + 1
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ free_trials_remaining: newCount })
+        .eq('id', userId)
+
+      if (error) throw error
+    } catch (error) {
+      console.error('Error refunding free trial:', error)
+      throw error
+    }
+  }
+
+  /**
    * Get next waiting list position
    */
   private static async getNextWaitingListPosition(instanceId: string): Promise<number> {
@@ -517,16 +553,30 @@ export class ReservationService {
   private static async promoteFromWaitingList(instanceId: string): Promise<void> {
     try {
       // Get first person in waiting list
-      const { data: waiting, error } = await supabase
+      const { data: waiting } = await supabase
         .from('reservations')
-        .select('*, subscription:subscription_id(*)')
+        .select('id, user_id, subscription_id, status, session_deducted, sessions_deducted')
         .eq('course_instance_id', instanceId)
         .eq('status', 'waiting_list')
-        .order('waiting_list_position', { ascending: true })
+        .order('created_at', { ascending: true })
         .limit(1)
         .maybeSingle()
 
-      if (error || !waiting) return
+      if (!waiting) {
+        // No one in waiting list
+        return
+      }
+
+      // Get subscription separately
+      let subscription = null
+      if (waiting.subscription_id) {
+        const { data: subData } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('id', waiting.subscription_id)
+          .maybeSingle()
+        subscription = subData
+      }
 
       // Validate their subscription is still valid
       if (!waiting.user_id) {
@@ -551,8 +601,8 @@ export class ReservationService {
       // Deduct session if session pack
       let sessionDeducted = false
       let sessionsDeducted = 0
-      if (waiting.subscription?.type.includes('session_pack')) {
-        await this.decrementSession(waiting.subscription.id)
+      if (subscription?.type.includes('session_pack')) {
+        await this.decrementSession(subscription.id)
         sessionDeducted = true
         sessionsDeducted = 1
       }
@@ -566,7 +616,6 @@ export class ReservationService {
           reserved_at: new Date().toISOString(),
           session_deducted: sessionDeducted,
           sessions_deducted: sessionsDeducted,
-          waiting_list_position: null,
         })
         .eq('id', waiting.id)
 
@@ -579,60 +628,6 @@ export class ReservationService {
       })
     } catch (error) {
       console.error('Error promoting from waiting list:', error)
-    }
-  }
-
-  /**
-   * Increment course reservations (for one-time courses)
-   */
-  private static async incrementCourseReservations(courseId: string): Promise<void> {
-    try {
-      // Get current reservations count
-      const { data: course, error: fetchError } = await supabase
-        .from('courses')
-        .select('current_reservations')
-        .eq('id', courseId)
-        .single()
-
-      if (fetchError) throw fetchError
-
-      const newCount = (course.current_reservations || 0) + 1
-
-      const { error } = await supabase
-        .from('courses')
-        .update({ current_reservations: newCount })
-        .eq('id', courseId)
-
-      if (error) throw error
-    } catch (error) {
-      console.error('Error incrementing course reservations:', error)
-    }
-  }
-
-  /**
-   * Decrement course reservations (for one-time courses)
-   */
-  private static async decrementCourseReservations(courseId: string): Promise<void> {
-    try {
-      // Get current reservations count
-      const { data: course, error: fetchError } = await supabase
-        .from('courses')
-        .select('current_reservations')
-        .eq('id', courseId)
-        .single()
-
-      if (fetchError) throw fetchError
-
-      const newCount = Math.max((course.current_reservations || 0) - 1, 0)
-
-      const { error } = await supabase
-        .from('courses')
-        .update({ current_reservations: newCount })
-        .eq('id', courseId)
-
-      if (error) throw error
-    } catch (error) {
-      console.error('Error decrementing course reservations:', error)
     }
   }
 

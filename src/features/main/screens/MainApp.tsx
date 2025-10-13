@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useBadges } from '@/features/profile/hooks/useBadges'
 import { ScheduleScreen } from '@/features/schedule/screens/ScheduleScreen'
@@ -19,10 +20,10 @@ export const MainApp = () => {
     switch (activeTab) {
       case 'schedule':
         return <ScheduleScreen />
-      case 'accomplishments':
-        return <AccomplissementsScreen />
       case 'reservations':
         return <ReservationsScreen />
+      case 'accomplishments':
+        return <AccomplissementsScreen />
       case 'profile':
         return <ProfileScreen />
       default:
@@ -31,7 +32,7 @@ export const MainApp = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Glass App Header */}
       <DarkAppHeader
         {...(user?.first_name ? { firstName: user.first_name } : {})}
@@ -47,7 +48,7 @@ export const MainApp = () => {
 
       {/* Glass Tab Bar */}
       <DarkTabBar activeTab={activeTab} onTabChange={setActiveTab} />
-    </View>
+    </SafeAreaView>
   )
 }
 

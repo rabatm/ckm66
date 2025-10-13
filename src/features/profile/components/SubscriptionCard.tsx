@@ -3,15 +3,17 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, typography } from '@/theme'
 import { DarkCard } from '@/components/ui'
-import type { SubscriptionInfo } from '../services/subscription.service'
+import type { SubscriptionInfo } from '../types/profile.types'
 import { getSessionUsagePercentage } from '../services/subscription.service'
+import type { AuthUser } from '@/features/auth/types/auth.types'
 
 interface SubscriptionCardProps {
   subscriptionInfo: SubscriptionInfo | null
   isLoading: boolean
+  user?: AuthUser | null
 }
 
-export function SubscriptionCard({ subscriptionInfo, isLoading }: SubscriptionCardProps) {
+export function SubscriptionCard({ subscriptionInfo, isLoading, user }: SubscriptionCardProps) {
   if (isLoading) {
     return (
       <DarkCard>
@@ -21,6 +23,32 @@ export function SubscriptionCard({ subscriptionInfo, isLoading }: SubscriptionCa
   }
 
   if (!subscriptionInfo?.subscription) {
+    // Check if user is a guest and show free trials
+    if (user?.role === 'guest' && user.free_trials_remaining !== null) {
+      return (
+        <DarkCard style={styles.subscriptionCard}>
+          <View style={styles.header}>
+            <View style={[styles.statusBadge, { backgroundColor: '#10B981' }]}>
+              <Text style={styles.statusBadgeText}>Essai gratuit</Text>
+            </View>
+            <Text style={styles.subscriptionType}>Membre invité</Text>
+          </View>
+
+          <View style={styles.details}>
+            <View style={styles.row}>
+              <View style={styles.labelContainer}>
+                <Ionicons name="ticket" size={14} color={colors.text.tertiary} />
+                <Text style={styles.label}>Essais restants</Text>
+              </View>
+              <Text style={styles.value}>
+                {`${user.free_trials_remaining} essai${user.free_trials_remaining !== 1 ? 's' : ''} restant${user.free_trials_remaining !== 1 ? 's' : ''}`}
+              </Text>
+            </View>
+          </View>
+        </DarkCard>
+      )
+    }
+
     return (
       <DarkCard style={styles.noSubscriptionCard}>
         <Ionicons name="clipboard-outline" size={48} color={colors.text.tertiary} />

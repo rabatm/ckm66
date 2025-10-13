@@ -407,6 +407,7 @@ export type Database = {
           current_streak: number
           email: string
           first_name: string
+          free_trials_remaining: number | null
           id: string
           is_active: boolean | null
           join_date: string | null
@@ -445,6 +446,7 @@ export type Database = {
           current_streak?: number
           email?: string
           first_name?: string
+          free_trials_remaining?: number | null
           id?: string
           is_active?: boolean | null
           join_date?: string | null
@@ -532,6 +534,7 @@ export type Database = {
           course_instance_id: string | null
           created_at: string | null
           id: string
+          is_free_trial: boolean | null
           last_notification_date: string | null
           notes: string | null
           notification_sent: boolean | null
@@ -559,6 +562,7 @@ export type Database = {
           course_instance_id?: string | null
           created_at?: string | null
           id?: string
+          is_free_trial?: boolean | null
           last_notification_date?: string | null
           notes?: string | null
           notification_sent?: boolean | null
@@ -586,6 +590,7 @@ export type Database = {
           course_instance_id?: string | null
           created_at?: string | null
           id?: string
+          is_free_trial?: boolean | null
           last_notification_date?: string | null
           notes?: string | null
           notification_sent?: boolean | null

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { View, ActivityIndicator, StyleSheet } from 'react-native'
+import { StatusBar } from 'expo-status-bar'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '@/features/auth/AuthProvider'
@@ -75,7 +76,10 @@ function AppContent() {
   }
 
   return (
-    <View style={styles.container}>{isAuthenticated && user ? <MainApp /> : <AuthScreen />}</View>
+    <View style={styles.container}>
+      <StatusBar style="light" backgroundColor={colors.background.primary} />
+      {isAuthenticated && user ? <MainApp /> : <AuthScreen />}
+    </View>
   )
 }
 

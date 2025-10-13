@@ -7,6 +7,8 @@ import type {
 } from '../services/reservation.service'
 import { COURSES_QUERY_KEY } from './useCourses'
 import { RESERVATIONS_QUERY_KEY } from './useReservations'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { supabase } from '@/lib/supabase'
 
 /**
  * useBooking Hook
@@ -15,6 +17,7 @@ import { RESERVATIONS_QUERY_KEY } from './useReservations'
 
 export function useBooking() {
   const queryClient = useQueryClient()
+  const { user, updateUser } = useAuth()
 
   return useMutation({
     mutationFn: async (data: CreateInstanceReservationData) => {
@@ -31,7 +34,24 @@ export function useBooking() {
       // Create reservation
       return ReservationService.createReservation(data)
     },
-    onSuccess: (reservation) => {
+    onSuccess: async (reservation) => {
+      // Refresh user data to get updated free trials count for guests
+      if (user?.role === 'guest' && user?.id) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+
+          if (profile && !error) {
+            updateUser(profile)
+          }
+        } catch (error) {
+          console.error('Failed to refresh user profile:', error)
+        }
+      }
+
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: [COURSES_QUERY_KEY] })
       queryClient.invalidateQueries({ queryKey: [RESERVATIONS_QUERY_KEY] })
@@ -45,7 +65,7 @@ export function useBooking() {
           : 'Réservation confirmée !'
       )
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Booking error:', error)
       Alert.alert('Erreur', error.message || 'Impossible de réserver ce cours')
     },
@@ -59,12 +79,30 @@ export function useBooking() {
 
 export function useCancelBooking() {
   const queryClient = useQueryClient()
+  const { user, updateUser } = useAuth()
 
   return useMutation({
     mutationFn: (data: CancelInstanceReservationData) => {
       return ReservationService.cancelReservation(data)
     },
-    onSuccess: (reservation) => {
+    onSuccess: async (reservation) => {
+      // Refresh user data if it's a guest (to update free_trials_remaining after potential refund)
+      if (user?.role === 'guest' && user?.id) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+
+          if (profile && !error) {
+            updateUser(profile)
+          }
+        } catch (error) {
+          console.error('Failed to refresh user profile:', error)
+        }
+      }
+
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: [COURSES_QUERY_KEY] })
       queryClient.invalidateQueries({ queryKey: [RESERVATIONS_QUERY_KEY] })
@@ -76,7 +114,7 @@ export function useCancelBooking() {
 
       Alert.alert('Annulation confirmée', `Votre réservation a été annulée.${refundMessage}`)
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Cancellation error:', error)
       Alert.alert('Erreur', error.message || "Impossible d'annuler la réservation")
     },

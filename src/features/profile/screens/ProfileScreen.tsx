@@ -175,6 +175,7 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
               <SubscriptionCard
                 subscriptionInfo={subscriptionInfo}
                 isLoading={isLoadingSubscription}
+                user={user}
               />
             </View>
           </>

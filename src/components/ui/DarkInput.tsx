@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { View, TextInput, Text, StyleSheet, ViewStyle, TextInputProps } from 'react-native'
 import { colors, typography, spacing } from '@/theme'
 
-interface DarkInputProps extends TextInputProps {
+interface DarkInputProps extends Omit<TextInputProps, 'style'> {
   label?: string
   placeholder?: string
   value?: string

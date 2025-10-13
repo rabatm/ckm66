@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, typography } from '@/theme'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-export type TabType = 'schedule' | 'accomplishments' | 'reservations' | 'profile'
+export type TabType = 'schedule' | 'reservations' | 'accomplishments' | 'profile'
 
 interface TabConfig {
   key: TabType
@@ -25,14 +25,14 @@ const TABS: TabConfig[] = [
     icon: 'calendar-outline',
   },
   {
-    key: 'accomplishments',
-    label: 'Badges',
-    icon: 'trophy-outline',
-  },
-  {
     key: 'reservations',
     label: 'Réservations',
     icon: 'list-outline',
+  },
+  {
+    key: 'accomplishments',
+    label: 'Badges',
+    icon: 'trophy-outline',
   },
   {
     key: 'profile',
