@@ -153,24 +153,22 @@ export async function fetchBadgesWithProgress(userId: string): Promise<BadgeWith
  * Get user progress summary (level, points, badges)
  */
 export async function getUserProgress(userId: string): Promise<UserProgress> {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('total_points, current_level')
-    .eq('id', userId)
-    .maybeSingle()
+  // Get badges to calculate total points accurately
+  const badges = await fetchBadgesWithProgress(userId)
+  const unlockedBadges = badges.filter((b) => b.is_unlocked)
 
-  if (error) {
-    console.error('Error fetching user progress:', error)
-    throw error
-  }
+  // Calculate total points from unlocked badges
+  const totalPoints = unlockedBadges.reduce((sum, badge) => sum + badge.points, 0)
 
-  // If no profile exists, return default values
-  if (!profile) {
-    console.warn(`No profile found for user ${userId}, returning default progress`)
-  }
-
-  const totalPoints = profile?.total_points || 0
-  const currentLevel = (profile?.current_level || 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7
+  // Calculate current level based on total points
+  let currentLevel: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1
+  if (totalPoints >= 3601) currentLevel = 7
+  else if (totalPoints >= 2401) currentLevel = 6
+  else if (totalPoints >= 1501) currentLevel = 5
+  else if (totalPoints >= 901) currentLevel = 4
+  else if (totalPoints >= 451) currentLevel = 3
+  else if (totalPoints >= 151) currentLevel = 2
+  else currentLevel = 1
 
   const levelInfo = LEVELS[currentLevel]
   const nextLevel = (currentLevel + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
@@ -188,12 +186,8 @@ export async function getUserProgress(userId: string): Promise<UserProgress> {
     .select('*', { count: 'exact', head: true })
     .eq('is_active', true)
 
-  const { count: unlockedBadges } = await supabase
-    .from('user_badges')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-
-  const badgesPercentage = totalBadges ? Math.round(((unlockedBadges || 0) / totalBadges) * 100) : 0
+  const unlockedBadgesCount = unlockedBadges.length
+  const badgesPercentage = totalBadges ? Math.round((unlockedBadgesCount / totalBadges) * 100) : 0
 
   return {
     total_points: totalPoints,
@@ -203,7 +197,7 @@ export async function getUserProgress(userId: string): Promise<UserProgress> {
     points_to_next_level: pointsToNextLevel,
     progress_percentage: progressPercentage,
     total_badges: totalBadges || 0,
-    unlocked_badges: unlockedBadges || 0,
+    unlocked_badges: unlockedBadgesCount,
     badges_percentage: badgesPercentage,
   }
 }
@@ -306,14 +300,15 @@ export async function createCustomBadge(
  */
 export async function getBadgeStats(userId: string) {
   const badges = await fetchBadgesWithProgress(userId)
+  const unlockedBadges = badges.filter((b) => b.is_unlocked)
 
   const stats = {
     total_badges: badges.length,
-    unlocked_badges: badges.filter((b) => b.is_unlocked).length,
-    locked_badges: badges.filter((b) => !b.is_unlocked).length,
-    automatic_unlocked: badges.filter((b) => b.is_unlocked && b.type === 'automatic').length,
-    manual_unlocked: badges.filter((b) => b.is_unlocked && b.type === 'manual').length,
-    total_points: badges.filter((b) => b.is_unlocked).reduce((sum, b) => sum + b.points, 0),
+    unlocked_badges: unlockedBadges.length,
+    locked_badges: badges.length - unlockedBadges.length,
+    automatic_unlocked: unlockedBadges.filter((b) => b.type === 'automatic').length,
+    manual_unlocked: unlockedBadges.filter((b) => b.type === 'manual').length,
+    total_points: unlockedBadges.reduce((sum, b) => sum + b.points, 0),
     by_category: {} as Record<BadgeCategory, { total: number; unlocked: number }>,
   }
 

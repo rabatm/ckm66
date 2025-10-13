@@ -96,13 +96,13 @@ export interface LevelInfo {
 }
 
 export const LEVELS: Record<UserLevel, LevelInfo> = {
-  1: { level: 1, title: 'Débutant', min_points: 0, max_points: 50, color: '#9CA3AF' },
-  2: { level: 2, title: 'Apprenti', min_points: 51, max_points: 150, color: '#60A5FA' },
-  3: { level: 3, title: 'Pratiquant', min_points: 151, max_points: 300, color: '#34D399' },
-  4: { level: 4, title: 'Confirmé', min_points: 301, max_points: 500, color: '#FBBF24' },
-  5: { level: 5, title: 'Expert', min_points: 501, max_points: 800, color: '#F97316' },
-  6: { level: 6, title: 'Maître', min_points: 801, max_points: 1200, color: '#A855F7' },
-  7: { level: 7, title: 'Légende', min_points: 1201, max_points: 999999, color: '#EF4444' },
+  1: { level: 1, title: 'Débutant', min_points: 0, max_points: 150, color: '#9CA3AF' },
+  2: { level: 2, title: 'Apprenti', min_points: 151, max_points: 450, color: '#60A5FA' },
+  3: { level: 3, title: 'Pratiquant', min_points: 451, max_points: 900, color: '#34D399' },
+  4: { level: 4, title: 'Confirmé', min_points: 901, max_points: 1500, color: '#FBBF24' },
+  5: { level: 5, title: 'Expert', min_points: 1501, max_points: 2400, color: '#F97316' },
+  6: { level: 6, title: 'Maître', min_points: 2401, max_points: 3600, color: '#A855F7' },
+  7: { level: 7, title: 'Légende', min_points: 3601, max_points: 999999, color: '#EF4444' },
 }
 
 export interface UserProgress {
