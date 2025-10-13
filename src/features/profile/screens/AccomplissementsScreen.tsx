@@ -131,7 +131,12 @@ export function AccomplissementsScreen() {
               >
                 <View style={styles.badgeCardLeft}>
                   <View style={styles.badgeIcon}>
-                    <BadgeIcon badgeCode={badge.code} size={24} color={colors.secondary[500]} />
+                    <BadgeIcon
+                      badgeCode={badge.code}
+                      emoji={badge.icon_emoji}
+                      size={24}
+                      color={colors.secondary[500]}
+                    />
                   </View>
                   <View style={styles.badgeInfo}>
                     <Text style={styles.badgeName}>{badge.name}</Text>
@@ -196,6 +201,7 @@ export function AccomplissementsScreen() {
                   {selectedBadge.is_unlocked ? (
                     <BadgeIcon
                       badgeCode={selectedBadge.code}
+                      emoji={selectedBadge.icon_emoji}
                       size={48}
                       color={colors.secondary[500]}
                     />

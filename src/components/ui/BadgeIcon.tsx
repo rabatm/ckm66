@@ -1,8 +1,10 @@
 import React from 'react'
 import { Ionicons } from '@expo/vector-icons'
+import { Text } from 'react-native'
 
 interface BadgeIconProps {
   badgeCode: string
+  emoji?: string
   size?: number
   color?: string
 }
@@ -71,10 +73,15 @@ const BADGE_ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
 
 export const BadgeIcon: React.FC<BadgeIconProps> = ({
   badgeCode,
+  emoji,
   size = 24,
   color = '#6B7280',
 }) => {
-  const iconName = BADGE_ICON_MAP[badgeCode] || 'help-circle-outline'
+  // Use emoji from database if available, otherwise use icon mapping
+  if (emoji) {
+    return <Text style={{ fontSize: size, color }}>{emoji}</Text>
+  }
 
+  const iconName = BADGE_ICON_MAP[badgeCode] || 'help-circle-outline'
   return <Ionicons name={iconName} size={size} color={color} />
 }
