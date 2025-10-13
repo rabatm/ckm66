@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native'
 import { SimpleLineIcons } from '@expo/vector-icons'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { colors, spacing, typography } from '@/theme'
 import { useInstances, useInstanceBooking, useCancelInstanceBooking } from '../hooks'
@@ -20,6 +21,7 @@ import type { Course } from '../types'
 
 export const ScheduleScreen = () => {
   const { user } = useAuth()
+  const insets = useSafeAreaInsets()
   const [selectedInstance, setSelectedInstance] = useState<CourseInstanceWithDetails | null>(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
 
@@ -169,7 +171,10 @@ export const ScheduleScreen = () => {
     <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{
+          paddingTop: spacing.xl,
+          paddingBottom: Math.max(insets.bottom + 120, spacing['5xl'] + 60),
+        }}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -271,10 +276,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  scrollContent: {
-    paddingTop: spacing.xl,
-    paddingBottom: spacing['4xl'],
   },
   section: {
     paddingHorizontal: spacing.xl,

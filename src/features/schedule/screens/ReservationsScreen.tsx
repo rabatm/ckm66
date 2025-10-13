@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Text, ScrollView, StyleSheet, Alert, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, typography } from '@/theme'
 import { useReservationsGrouped } from '../hooks'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -9,6 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export const ReservationsScreen = () => {
   const { user } = useAuth()
+  const insets = useSafeAreaInsets()
   const { data: reservations, isLoading, error } = useReservationsGrouped(user?.id || '')
 
   console.log('ReservationsScreen - User:', user)
@@ -105,7 +107,13 @@ export const ReservationsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={{
+          paddingTop: spacing.xl,
+          paddingBottom: Math.max(insets.bottom + 120, spacing['5xl'] + 60),
+        }}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Mes réservations</Text>
@@ -162,10 +170,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  scrollContent: {
-    paddingTop: spacing.xl,
-    paddingBottom: spacing['4xl'],
   },
   header: {
     paddingHorizontal: spacing.xl,

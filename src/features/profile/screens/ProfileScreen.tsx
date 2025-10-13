@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import { Ionicons } from '@expo/vector-icons'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, typography } from '@/theme'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useBadges } from '../hooks/useBadges'
@@ -29,6 +30,7 @@ interface ProfileScreenProps {
 
 export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
   const { user, signOut, updateUser } = useAuth()
+  const insets = useSafeAreaInsets()
   const { userProgress, isLoading, refetch: refetchBadges } = useBadges()
   const {
     subscriptionInfo,
@@ -134,7 +136,12 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={{
+          paddingBottom: Math.max(insets.bottom + 120, spacing['5xl'] + 60),
+        }}
+      >
         {/* Profile Header */}
         <ProfileHeader
           firstName={user?.first_name || ''}
@@ -201,8 +208,6 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
             <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Se déconnecter</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Edit Profile Modal */}
@@ -224,9 +229,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: spacing['4xl'],
   },
   section: {
     paddingHorizontal: spacing.xl,
