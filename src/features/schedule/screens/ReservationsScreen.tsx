@@ -110,6 +110,7 @@ export const ReservationsScreen = () => {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{
+          paddingTop: insets.top,
           paddingBottom: Math.max(insets.bottom + 120, spacing['5xl'] + 60),
         }}
       >
