@@ -169,9 +169,19 @@ export const ScheduleScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* Fixed Week Navigator */}
+      <View style={styles.fixedNavigator}>
+        <WeekNavigator
+          weekStart={currentWeekStart}
+          onPreviousWeek={handlePreviousWeek}
+          onNextWeek={handleNextWeek}
+        />
+      </View>
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{
+          paddingTop: spacing.sm,
           paddingBottom: Math.max(insets.bottom + 120, spacing['5xl'] + 60),
         }}
         refreshControl={
@@ -183,15 +193,6 @@ export const ScheduleScreen = () => {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Week Navigator */}
-        <View style={styles.weekNavigatorContainer}>
-          <WeekNavigator
-            weekStart={currentWeekStart}
-            onPreviousWeek={handlePreviousWeek}
-            onNextWeek={handleNextWeek}
-          />
-        </View>
-
         {/* Loading / Error States */}
         {isLoading && !instances ? (
           <View style={styles.loadingContainer}>
@@ -276,10 +277,13 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  weekNavigatorContainer: {
+  fixedNavigator: {
     paddingHorizontal: spacing.xl,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xl,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.background.primary,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.dark,
   },
   section: {
     paddingHorizontal: spacing.xl,
