@@ -4,7 +4,6 @@ import { BlurView } from 'expo-blur'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, typography } from '@/theme'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { UserLevel } from '@/features/profile/types/badge.types'
 import { LEVELS } from '@/features/profile/types/badge.types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -127,7 +126,6 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
   totalPoints = 0,
   onReservationPress,
 }) => {
-  const insets = useSafeAreaInsets()
   const { user } = useAuth()
   const { nextReservation } = useNextReservation(user?.id || '')
   const { subscriptionInfo } = useSubscription()
@@ -197,14 +195,7 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
   }, [subscriptionInfo])
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          paddingTop: Platform.OS === 'ios' ? insets.top : spacing.md,
-        },
-      ]}
-    >
+    <View style={styles.container}>
       <BlurView intensity={80} tint="dark" style={styles.blurContainer}>
         <LinearGradient
           colors={['rgba(185, 28, 28, 0.08)', 'rgba(26, 32, 44, 0.6)']}
