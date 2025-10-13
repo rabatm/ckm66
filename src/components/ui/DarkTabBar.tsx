@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { BlurView } from 'expo-blur'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, typography } from '@/theme'
@@ -54,8 +54,7 @@ export const DarkTabBar: React.FC<DarkTabBarProps> = ({ activeTab, onTabChange }
           style={[
             styles.innerContainer,
             {
-              paddingBottom:
-                Platform.OS === 'ios' ? Math.max(insets.bottom, spacing.sm) : spacing.sm,
+              paddingBottom: Math.max(insets.bottom, spacing.sm),
             },
           ]}
         >

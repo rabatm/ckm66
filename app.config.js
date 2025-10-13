@@ -31,6 +31,11 @@ module.exports = {
         backgroundColor: '#ffffff',
       },
       package: 'com.ckm66.myapp',
+      navigationBar: {
+        visible: true,
+        backgroundColor: '#1A202C',
+        barStyle: 'light-content',
+      },
     },
     plugins: ['expo-router', 'expo-secure-store'],
     experiments: {

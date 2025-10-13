@@ -32,7 +32,7 @@ export const MainApp = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Glass App Header */}
       <DarkAppHeader
         {...(user?.first_name ? { firstName: user.first_name } : {})}
