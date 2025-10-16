@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from 'react'
-import { View, ActivityIndicator, StyleSheet } from 'react-native'
+import { View, ActivityIndicator, StyleSheet, ImageBackground } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
+import * as Linking from 'expo-linking'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { AuthScreen } from '@/features/auth/screens/AuthScreen'
+import { ForgotPasswordScreen } from '@/features/auth/screens/ForgotPasswordScreen'
+import { ResetPasswordScreen } from '@/features/auth/screens/ResetPasswordScreen'
 import { OnboardingScreen } from '@/features/auth/screens/OnboardingScreen'
 import { MainApp } from '@/features/main/screens/MainApp'
 import { supabase } from '@/lib/supabase'
 import { colors } from '@/theme'
+
+const loginBackground = require('@/assets/login-bg.png') as number
+
+type AuthScreenType = 'login' | 'forgot-password' | 'reset-password'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +32,40 @@ function AppContent() {
   console.log('AppContent rendered')
   const { user, isLoading, isAuthenticated } = useAuth()
   const [needsOnboarding, setNeedsOnboarding] = useState<boolean | null>(null)
+  const [authScreen, setAuthScreen] = useState<AuthScreenType>('login')
+
+  // Listen for deep links (e.g., password reset links)
+  useEffect(() => {
+    // Handle initial URL if app was opened via deep link
+    const handleInitialURL = async () => {
+      const url = await Linking.getInitialURL()
+      if (url) {
+        handleDeepLink(url)
+      }
+    }
+
+    // Handle URL events when app is already open
+    const subscription = Linking.addEventListener('url', (event: { url: string }) => {
+      handleDeepLink(event.url)
+    })
+
+    handleInitialURL()
+
+    return () => {
+      subscription.remove()
+    }
+  }, [])
+
+  // Handle deep link URLs
+  const handleDeepLink = (url: string) => {
+    console.log('Deep link received:', url)
+
+    // Parse the URL to check if it's a password reset link
+    if (url.includes('reset-password') || url.includes('type=recovery')) {
+      console.log('Password reset link detected')
+      setAuthScreen('reset-password')
+    }
+  }
 
   useEffect(() => {
     async function checkProfile() {
@@ -75,10 +116,49 @@ function AppContent() {
     )
   }
 
+  // Render authenticated screens
+  if (isAuthenticated && user) {
+    return (
+      <View style={styles.container}>
+        <StatusBar style="light" backgroundColor={colors.background.primary} />
+        <MainApp />
+      </View>
+    )
+  }
+
+  // Render auth screens with background
+  const renderAuthScreen = () => {
+    switch (authScreen) {
+      case 'forgot-password':
+        return (
+          <ForgotPasswordScreen
+            onBack={() => setAuthScreen('login')}
+            onSuccess={() => setAuthScreen('login')}
+          />
+        )
+      case 'reset-password':
+        return (
+          <ResetPasswordScreen
+            onSuccess={() => setAuthScreen('login')}
+            onCancel={() => setAuthScreen('login')}
+          />
+        )
+      default:
+        return <AuthScreen onShowForgotPassword={() => setAuthScreen('forgot-password')} />
+    }
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" backgroundColor={colors.background.primary} />
-      {isAuthenticated && user ? <MainApp /> : <AuthScreen />}
+
+      {/* Background Image for auth screens */}
+      <ImageBackground source={loginBackground} style={styles.background} resizeMode="cover">
+        <View style={styles.overlay} />
+      </ImageBackground>
+
+      {/* Auth Screen Content */}
+      <View style={styles.content}>{renderAuthScreen()}</View>
     </View>
   )
 }
@@ -106,5 +186,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.background.primary,
+  },
+  background: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  content: {
+    flex: 1,
   },
 })

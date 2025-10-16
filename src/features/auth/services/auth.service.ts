@@ -104,7 +104,16 @@ export class AuthService {
   // Reset password
   static async resetPassword(email: string) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'com.kravmaga://reset-password',
+      redirectTo: 'com.ckm66.myapp://reset-password',
+    })
+
+    if (error) throw error
+  }
+
+  // Update password (called when user submits new password)
+  static async updatePassword(newPassword: string) {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
     })
 
     if (error) throw error

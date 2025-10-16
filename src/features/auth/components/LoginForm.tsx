@@ -17,7 +17,7 @@ import { colors, spacing, typography } from '@/theme'
 
 interface LoginFormProps {
   onLoginSuccess?: () => void
-  onForgotPassword?: (email: string) => void
+  onForgotPassword?: () => void
 }
 
 export const LoginForm = ({ onLoginSuccess, onForgotPassword }: LoginFormProps) => {
@@ -71,11 +71,7 @@ export const LoginForm = ({ onLoginSuccess, onForgotPassword }: LoginFormProps) 
   }
 
   const handleForgotPassword = () => {
-    if (!formData.email.trim()) {
-      setValidationErrors({ email: 'Email requis pour la réinitialisation' })
-      return
-    }
-    onForgotPassword?.(formData.email)
+    onForgotPassword?.()
   }
 
   return (

@@ -36,7 +36,21 @@ module.exports = {
         backgroundColor: '#1A202C',
         barStyle: 'light-content',
       },
+      intentFilters: [
+        {
+          action: 'VIEW',
+          autoVerify: true,
+          data: [
+            {
+              scheme: 'com.ckm66.myapp',
+              host: 'reset-password',
+            },
+          ],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+      ],
     },
+    scheme: 'com.ckm66.myapp',
     plugins: ['expo-router', 'expo-secure-store'],
     experiments: {
       typedRoutes: true,
