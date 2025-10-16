@@ -9,6 +9,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { AuthScreen } from '@/features/auth/screens/AuthScreen'
 import { ForgotPasswordScreen } from '@/features/auth/screens/ForgotPasswordScreen'
 import { ResetPasswordScreen } from '@/features/auth/screens/ResetPasswordScreen'
+import { ChangePasswordScreen } from '@/features/auth/screens/ChangePasswordScreen'
 import { OnboardingScreen } from '@/features/auth/screens/OnboardingScreen'
 import { MainApp } from '@/features/main/screens/MainApp'
 import { supabase } from '@/lib/supabase'
@@ -32,6 +33,7 @@ function AppContent() {
   console.log('AppContent rendered')
   const { user, isLoading, isAuthenticated } = useAuth()
   const [needsOnboarding, setNeedsOnboarding] = useState<boolean | null>(null)
+  const [needsPasswordChange, setNeedsPasswordChange] = useState<boolean | null>(null)
   const [authScreen, setAuthScreen] = useState<AuthScreenType>('login')
 
   // Listen for deep links (e.g., password reset links)
@@ -77,13 +79,16 @@ function AppContent() {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('first_name, last_name')
+          .select('first_name, last_name, is_new_user')
           .eq('id', user.id)
           .maybeSingle()
 
         // User needs onboarding if profile doesn't exist or is incomplete
         const incomplete = !profile || !profile.first_name || !profile.last_name
         setNeedsOnboarding(incomplete)
+        if (profile?.is_new_user) {
+          setNeedsPasswordChange(true)
+        }
       } catch (error) {
         console.error('Error checking profile:', error)
         setNeedsOnboarding(false)
@@ -93,12 +98,24 @@ function AppContent() {
     checkProfile()
   }, [user?.id])
 
-  if (isLoading || (isAuthenticated && needsOnboarding === null)) {
+  if (isLoading || (isAuthenticated && (needsOnboarding === null || needsPasswordChange === null))) {
     return (
       <View style={styles.container}>
         <View style={styles.loading}>
           <ActivityIndicator size="large" color={colors.primary[500]} />
         </View>
+      </View>
+    )
+  }
+
+  // Show change password screen if authenticated and is a new user
+  if (isAuthenticated && user && needsPasswordChange) {
+    return (
+      <View style={styles.container}>
+        <ChangePasswordScreen
+          userId={user.id}
+          onSuccess={() => setNeedsPasswordChange(false)}
+        />
       </View>
     )
   }
