@@ -4,7 +4,7 @@ module.exports = {
   expo: {
     name: 'CKM66',
     slug: 'ckm66',
-    version: '1.0.0',
+    version: '1.0.2',
     orientation: 'portrait',
     icon: './src/assets/icon.jpg',
     userInterfaceStyle: 'automatic',
@@ -17,7 +17,7 @@ module.exports = {
       backgroundColor: '#ffffff',
     },
     ios: {
-      buildNumber: '2',
+      buildNumber: '3',
       supportsTablet: true,
       bundleIdentifier: 'com.ckm66.myapp',
       infoPlist: {
@@ -25,7 +25,7 @@ module.exports = {
       },
     },
     android: {
-      versionCode: 2,
+      versionCode: 3,
       adaptiveIcon: {
         foregroundImage: './src/assets/adaptive-icon.jpg',
         backgroundColor: '#ffffff',
