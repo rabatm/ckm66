@@ -22,6 +22,7 @@ import {
   BadgeStatsCard,
   SubscriptionCard,
   EditProfileModal,
+  NotificationPreferencesCard,
 } from '../components'
 
 interface ProfileScreenProps {
@@ -187,6 +188,13 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
             </View>
           </>
         ) : null}
+
+        {/* Notification Preferences */}
+        {user?.id && (
+          <View style={styles.section}>
+            <NotificationPreferencesCard userId={user.id} onUpdate={handleRefresh} />
+          </View>
+        )}
 
         {/* Actions */}
         <View style={styles.section}>

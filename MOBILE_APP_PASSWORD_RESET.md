@@ -1,4 +1,4 @@
-# 📱 Guide de Réinitialisation de Mot de Passe - Application Mobile
+/Users/martincelavie/DEV/martininfo/ckm092025/web/ckm-admin/docs/MOBILE_APP_PUSH_SETUP.md# 📱 Guide de Réinitialisation de Mot de Passe - Application Mobile
 
 ## Vue d'ensemble
 
