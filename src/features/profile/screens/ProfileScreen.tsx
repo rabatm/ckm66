@@ -20,6 +20,7 @@ import {
   ProfileHeader,
   LevelProgressCard,
   BadgeStatsCard,
+  BadgesList,
   SubscriptionCard,
   EditProfileModal,
   NotificationPreferencesCard,
@@ -34,7 +35,7 @@ type ProfileTabType = 'info' | 'badges' | 'notifications'
 export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
   const { user, signOut, updateUser } = useAuth()
   const insets = useSafeAreaInsets()
-  const { userProgress, isLoading, refetch: refetchBadges } = useBadges()
+  const { userProgress, badges, isLoading, refetch: refetchBadges } = useBadges()
   const {
     subscriptionInfo,
     isLoading: isLoadingSubscription,
@@ -77,17 +78,8 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
       case 'badges':
         return (
           <>
-            {/* Badge Stats */}
-            {!isLoading && userProgress && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Badges</Text>
-                <BadgeStatsCard
-                  unlockedBadges={userProgress.unlocked_badges}
-                  totalBadges={userProgress.total_badges}
-                  badgesPercentage={userProgress.badges_percentage}
-                />
-              </View>
-            )}
+            {/* Badges List */}
+            <BadgesList badges={badges} isLoading={isLoading} />
           </>
         )
 
