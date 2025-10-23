@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { View, ActivityIndicator, StyleSheet, ImageBackground } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import * as Linking from 'expo-linking'
+import * as Notifications from 'expo-notifications'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '@/features/auth/AuthProvider'
@@ -14,6 +15,7 @@ import { OnboardingScreen } from '@/features/auth/screens/OnboardingScreen'
 import { MainApp } from '@/features/main/screens/MainApp'
 import { supabase } from '@/lib/supabase'
 import { colors } from '@/theme'
+import { registerForPushNotifications } from '@/services/pushNotifications'
 
 const loginBackground = require('@/assets/login-bg.png') as number
 
@@ -35,6 +37,17 @@ function AppContent() {
   const [needsOnboarding, setNeedsOnboarding] = useState<boolean | null>(null)
   const [needsPasswordChange, setNeedsPasswordChange] = useState<boolean | null>(null)
   const [authScreen, setAuthScreen] = useState<AuthScreenType>('login')
+
+  // Handle deep link URLs (must be defined before useEffect that uses it)
+  const handleDeepLink = (url: string) => {
+    console.log('Deep link received:', url)
+
+    // Parse the URL to check if it's a password reset link
+    if (url.includes('reset-password') || url.includes('type=recovery')) {
+      console.log('Password reset link detected')
+      setAuthScreen('reset-password')
+    }
+  }
 
   // Listen for deep links (e.g., password reset links)
   useEffect(() => {
@@ -58,16 +71,61 @@ function AppContent() {
     }
   }, [])
 
-  // Handle deep link URLs
-  const handleDeepLink = (url: string) => {
-    console.log('Deep link received:', url)
+  // Setup push notifications when authenticated
+  useEffect(() => {
+    const setupPushNotifications = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
 
-    // Parse the URL to check if it's a password reset link
-    if (url.includes('reset-password') || url.includes('type=recovery')) {
-      console.log('Password reset link detected')
-      setAuthScreen('reset-password')
+      if (user) {
+        console.log('👤 Utilisateur connecté, enregistrement pour les notifications...')
+        await registerForPushNotifications()
+      } else {
+        console.log('ℹ️ Utilisateur non connecté, notifications désactivées')
+      }
     }
-  }
+
+    setupPushNotifications()
+
+    // Écouter les changements d'auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('✅ Connexion détectée, enregistrement pour les notifications')
+          await registerForPushNotifications()
+        }
+      }
+    )
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  // Setup notification listeners once on mount
+  useEffect(() => {
+    // Listen for incoming notifications
+    const notificationSubscription = Notifications.addNotificationReceivedListener((notification) => {
+      console.log('📬 Notification reçue:', notification.request.content.title)
+    })
+
+    // Listen for notification taps
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(
+      async (response) => {
+        const data = response.notification.request.content.data as Record<string, any>
+        console.log('👆 Notification tapée, data:', data)
+
+        if (data.type === 'admin_message' && data.messageId) {
+          const { recordMessageRead } = await import('@/services/pushNotifications')
+          await recordMessageRead(data.messageId as string)
+        }
+      }
+    )
+
+    return () => {
+      notificationSubscription.remove()
+      responseSubscription.remove()
+    }
+  }, [])
 
   useEffect(() => {
     async function checkProfile() {
@@ -86,12 +144,16 @@ function AppContent() {
         // User needs onboarding if profile doesn't exist or is incomplete
         const incomplete = !profile || !profile.first_name || !profile.last_name
         setNeedsOnboarding(incomplete)
+
         if (profile?.is_new_user) {
           setNeedsPasswordChange(true)
+        } else {
+          setNeedsPasswordChange(false)
         }
       } catch (error) {
         console.error('Error checking profile:', error)
         setNeedsOnboarding(false)
+        setNeedsPasswordChange(false)
       }
     }
 
