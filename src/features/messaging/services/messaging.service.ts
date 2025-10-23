@@ -93,19 +93,28 @@ export const markMessageAsRead = async (messageId: string): Promise<boolean> => 
       return false
     }
 
-    // Update the read_at timestamp
+    const now = new Date().toISOString()
+
+    // Upsert the read receipt (insert if not exists, update if exists)
     const { error } = await supabase
       .from('message_read_receipts')
-      .update({ read_at: new Date().toISOString() })
-      .eq('message_id', messageId)
-      .eq('user_id', user.id)
+      .upsert(
+        {
+          message_id: messageId,
+          user_id: user.id,
+          read_at: now,
+        },
+        {
+          onConflict: 'message_id,user_id',
+        }
+      )
 
     if (error) {
       console.error('❌ Error marking message as read:', error)
       return false
     }
 
-    console.log('✅ Message marked as read')
+    console.log('✅ Message marked as read:', messageId)
     return true
   } catch (error) {
     console.error('❌ Error in markMessageAsRead:', error)
