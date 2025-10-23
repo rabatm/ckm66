@@ -5,7 +5,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useBadges } from '@/features/profile/hooks/useBadges'
 import { ScheduleScreen } from '@/features/schedule/screens/ScheduleScreen'
 import { ProfileScreen } from '@/features/profile/screens/ProfileScreen'
-import { AccomplissementsScreen } from '@/features/profile/screens/AccomplissementsScreen'
+import { MessagesScreen } from '@/features/messaging/screens/MessagesScreen'
 import { ReservationsScreen } from '@/features/schedule/screens/ReservationsScreen'
 import { DarkTabBar, type TabType } from '@/components/ui/DarkTabBar'
 import { DarkAppHeader } from '@/components/ui/DarkAppHeader'
@@ -22,8 +22,8 @@ export const MainApp = () => {
         return <ScheduleScreen />
       case 'reservations':
         return <ReservationsScreen />
-      case 'accomplishments':
-        return <AccomplissementsScreen />
+      case 'messages':
+        return <MessagesScreen />
       case 'profile':
         return <ProfileScreen />
       default:

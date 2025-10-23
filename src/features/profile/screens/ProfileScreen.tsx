@@ -29,6 +29,8 @@ interface ProfileScreenProps {
   onBack?: () => void
 }
 
+type ProfileTabType = 'info' | 'badges' | 'notifications'
+
 export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
   const { user, signOut, updateUser } = useAuth()
   const insets = useSafeAreaInsets()
@@ -40,10 +42,70 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
   } = useSubscription()
   const [showEditModal, setShowEditModal] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [activeProfileTab, setActiveProfileTab] = useState<ProfileTabType>('info')
 
   const handleRefresh = () => {
     refetchBadges()
     refetchSubscription()
+  }
+
+  const renderProfileContent = () => {
+    switch (activeProfileTab) {
+      case 'info':
+        return (
+          <>
+            {/* Level Progress */}
+            {!isLoading && userProgress && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Progression</Text>
+                <LevelProgressCard userProgress={userProgress} />
+              </View>
+            )}
+
+            {/* Subscription */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Abonnement</Text>
+              <SubscriptionCard
+                subscriptionInfo={subscriptionInfo}
+                isLoading={isLoadingSubscription}
+                user={user}
+              />
+            </View>
+          </>
+        )
+
+      case 'badges':
+        return (
+          <>
+            {/* Badge Stats */}
+            {!isLoading && userProgress && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Badges</Text>
+                <BadgeStatsCard
+                  unlockedBadges={userProgress.unlocked_badges}
+                  totalBadges={userProgress.total_badges}
+                  badgesPercentage={userProgress.badges_percentage}
+                />
+              </View>
+            )}
+          </>
+        )
+
+      case 'notifications':
+        return (
+          <>
+            {/* Notification Preferences */}
+            {user?.id && (
+              <View style={styles.section}>
+                <NotificationPreferencesCard userId={user.id} onUpdate={handleRefresh} />
+              </View>
+            )}
+          </>
+        )
+
+      default:
+        return null
+    }
   }
 
   const handleLogout = async () => {
@@ -154,46 +216,75 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
           onChangePhoto={handleChangePhoto}
         />
 
-        {/* Loading / Error / Content */}
-        {isLoading ? (
+        {/* Profile Sub-Tabs */}
+        <View style={styles.subTabsContainer}>
+          <TouchableOpacity
+            style={[styles.subTab, activeProfileTab === 'info' && styles.subTabActive]}
+            onPress={() => setActiveProfileTab('info')}
+          >
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color={activeProfileTab === 'info' ? colors.primary[500] : colors.text.tertiary}
+            />
+            <Text
+              style={[
+                styles.subTabLabel,
+                activeProfileTab === 'info' && styles.subTabLabelActive,
+              ]}
+            >
+              Infos
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.subTab, activeProfileTab === 'badges' && styles.subTabActive]}
+            onPress={() => setActiveProfileTab('badges')}
+          >
+            <Ionicons
+              name="trophy-outline"
+              size={20}
+              color={activeProfileTab === 'badges' ? colors.primary[500] : colors.text.tertiary}
+            />
+            <Text
+              style={[
+                styles.subTabLabel,
+                activeProfileTab === 'badges' && styles.subTabLabelActive,
+              ]}
+            >
+              Badges
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.subTab, activeProfileTab === 'notifications' && styles.subTabActive]}
+            onPress={() => setActiveProfileTab('notifications')}
+          >
+            <Ionicons
+              name="notifications-outline"
+              size={20}
+              color={
+                activeProfileTab === 'notifications' ? colors.primary[500] : colors.text.tertiary
+              }
+            />
+            <Text
+              style={[
+                styles.subTabLabel,
+                activeProfileTab === 'notifications' && styles.subTabLabelActive,
+              ]}
+            >
+              Notifs
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Content based on active tab */}
+        {isLoading && activeProfileTab === 'info' ? (
           <View style={styles.loadingSection}>
             <ActivityIndicator size="small" color={colors.primary[500]} />
           </View>
-        ) : userProgress ? (
-          <>
-            {/* Level Progress */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Progression</Text>
-              <LevelProgressCard userProgress={userProgress} />
-            </View>
-
-            {/* Badge Stats */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Badges</Text>
-              <BadgeStatsCard
-                unlockedBadges={userProgress.unlocked_badges}
-                totalBadges={userProgress.total_badges}
-                badgesPercentage={userProgress.badges_percentage}
-              />
-            </View>
-
-            {/* Subscription */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Abonnement</Text>
-              <SubscriptionCard
-                subscriptionInfo={subscriptionInfo}
-                isLoading={isLoadingSubscription}
-                user={user}
-              />
-            </View>
-          </>
-        ) : null}
-
-        {/* Notification Preferences */}
-        {user?.id && (
-          <View style={styles.section}>
-            <NotificationPreferencesCard userId={user.id} onUpdate={handleRefresh} />
-          </View>
+        ) : (
+          renderProfileContent()
         )}
 
         {/* Actions */}
@@ -283,5 +374,34 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: {
     color: colors.error,
+  },
+  subTabsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.light,
+    gap: spacing.md,
+  },
+  subTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  subTabActive: {
+    borderBottomColor: colors.primary[500],
+  },
+  subTabLabel: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.text.tertiary,
+  },
+  subTabLabelActive: {
+    color: colors.primary[500],
   },
 })
