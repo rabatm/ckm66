@@ -1,14 +1,15 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useBadges } from '@/features/profile/hooks/useBadges'
 import { useUnreadMessages } from '@/features/messaging/hooks/useUnreadMessages'
+import { useNavigation } from '@/context/NavigationContext'
 import { ScheduleScreen } from '@/features/schedule/screens/ScheduleScreen'
 import { ProfileScreen } from '@/features/profile/screens/ProfileScreen'
 import { MessagesScreen } from '@/features/messaging/screens/MessagesScreen'
 import { ReservationsScreen } from '@/features/schedule/screens/ReservationsScreen'
-import { DarkTabBar, type TabType } from '@/components/ui/DarkTabBar'
+import { DarkTabBar } from '@/components/ui/DarkTabBar'
 import { DarkAppHeader } from '@/components/ui/DarkAppHeader'
 import { colors } from '@/theme'
 
@@ -16,7 +17,7 @@ export const MainApp = () => {
   const { user } = useAuth()
   const { userProgress } = useBadges()
   const { unreadCount } = useUnreadMessages()
-  const [activeTab, setActiveTab] = useState<TabType>('schedule')
+  const { activeTab, setActiveTab } = useNavigation()
 
   const renderTabContent = () => {
     switch (activeTab) {

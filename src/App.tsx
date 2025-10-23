@@ -6,6 +6,7 @@ import * as Notifications from 'expo-notifications'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '@/features/auth/AuthProvider'
+import { NavigationProvider, useNavigation } from '@/context/NavigationContext'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { AuthScreen } from '@/features/auth/screens/AuthScreen'
 import { ForgotPasswordScreen } from '@/features/auth/screens/ForgotPasswordScreen'
@@ -108,22 +109,8 @@ function AppContent() {
       console.log('📬 Notification reçue:', notification.request.content.title)
     })
 
-    // Listen for notification taps
-    const responseSubscription = Notifications.addNotificationResponseReceivedListener(
-      async (response) => {
-        const data = response.notification.request.content.data as Record<string, any>
-        console.log('👆 Notification tapée, data:', data)
-
-        if (data.type === 'admin_message' && data.messageId) {
-          const { recordMessageRead } = await import('@/services/pushNotifications')
-          await recordMessageRead(data.messageId as string)
-        }
-      }
-    )
-
     return () => {
       notificationSubscription.remove()
-      responseSubscription.remove()
     }
   }, [])
 
@@ -242,13 +229,49 @@ function AppContent() {
   )
 }
 
+/**
+ * Component to handle notification responses with access to navigation
+ */
+function NotificationHandler({ children }: { children: React.ReactNode }) {
+  const { navigateToTab } = useNavigation()
+
+  useEffect(() => {
+    // Listen for notification taps
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(
+      async (response) => {
+        const data = response.notification.request.content.data as Record<string, any>
+        console.log('👆 Notification tapée, data:', data)
+
+        if (data.type === 'admin_message' && data.messageId) {
+          // Mark message as read
+          const { recordMessageRead } = await import('@/services/pushNotifications')
+          await recordMessageRead(data.messageId as string)
+
+          // Navigate to Messages tab
+          navigateToTab('messages')
+        }
+      }
+    )
+
+    return () => {
+      responseSubscription.remove()
+    }
+  }, [navigateToTab])
+
+  return <>{children}</>
+}
+
 export default function App() {
   console.log('App component rendered')
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AppContent />
+          <NavigationProvider>
+            <NotificationHandler>
+              <AppContent />
+            </NotificationHandler>
+          </NavigationProvider>
         </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
