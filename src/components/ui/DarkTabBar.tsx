@@ -16,6 +16,7 @@ interface TabConfig {
 interface DarkTabBarProps {
   activeTab: TabType
   onTabChange: (tab: TabType) => void
+  unreadMessagesCount?: number
 }
 
 const TABS: TabConfig[] = [
@@ -44,7 +45,7 @@ const TABS: TabConfig[] = [
 /**
  * iOS-style glass design tab bar with blur effect
  */
-export const DarkTabBar: React.FC<DarkTabBarProps> = ({ activeTab, onTabChange }) => {
+export const DarkTabBar: React.FC<DarkTabBarProps> = ({ activeTab, onTabChange, unreadMessagesCount }) => {
   const insets = useSafeAreaInsets()
 
   return (
@@ -69,13 +70,21 @@ export const DarkTabBar: React.FC<DarkTabBarProps> = ({ activeTab, onTabChange }
                 activeOpacity={0.6}
               >
                 <View style={styles.tabContent}>
-                  {/* Icon */}
+                  {/* Icon with badge */}
                   <View style={[styles.iconContainer, isActive && styles.iconContainerActive]}>
                     <Ionicons
                       name={tab.icon}
                       size={24}
                       color={isActive ? colors.primary[500] : colors.text.tertiary}
                     />
+                    {/* Badge for unread messages */}
+                    {tab.key === 'messages' && unreadMessagesCount && unreadMessagesCount > 0 && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>
+                          {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                        </Text>
+                      </View>
+                    )}
                   </View>
 
                   {/* Label */}
@@ -163,5 +172,23 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.primary[500],
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: colors.error,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.background.primary,
+  },
+  badgeText: {
+    color: colors.text.primary,
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
   },
 })

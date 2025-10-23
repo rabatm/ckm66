@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useBadges } from '@/features/profile/hooks/useBadges'
+import { useUnreadMessages } from '@/features/messaging/hooks/useUnreadMessages'
 import { ScheduleScreen } from '@/features/schedule/screens/ScheduleScreen'
 import { ProfileScreen } from '@/features/profile/screens/ProfileScreen'
 import { MessagesScreen } from '@/features/messaging/screens/MessagesScreen'
@@ -14,6 +15,7 @@ import { colors } from '@/theme'
 export const MainApp = () => {
   const { user } = useAuth()
   const { userProgress } = useBadges()
+  const { unreadCount } = useUnreadMessages()
   const [activeTab, setActiveTab] = useState<TabType>('schedule')
 
   const renderTabContent = () => {
@@ -47,7 +49,7 @@ export const MainApp = () => {
       <View style={styles.content}>{renderTabContent()}</View>
 
       {/* Glass Tab Bar */}
-      <DarkTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+      <DarkTabBar activeTab={activeTab} onTabChange={setActiveTab} unreadMessagesCount={unreadCount} />
     </SafeAreaView>
   )
 }

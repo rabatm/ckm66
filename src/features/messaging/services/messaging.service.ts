@@ -23,18 +23,12 @@ export const fetchMessages = async (): Promise<Message[]> => {
       return []
     }
 
-    // Get all messages with read receipt info
+    console.log('📬 Fetching messages for user:', user.id)
+
+    // Get all messages
     const { data: messages, error: messagesError } = await supabase
       .from('messages')
-      .select(`
-        id,
-        title,
-        content,
-        admin_id,
-        created_at,
-        updated_at,
-        message_read_receipts(read_at)
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
 
     if (messagesError) {
@@ -42,13 +36,31 @@ export const fetchMessages = async (): Promise<Message[]> => {
       return []
     }
 
-    if (!messages) {
+    console.log('📦 Found messages:', messages?.length || 0)
+
+    if (!messages || messages.length === 0) {
+      console.log('ℹ️ No messages found')
       return []
     }
 
+    // Get read receipts for this user
+    const { data: readReceipts, error: receiptsError } = await supabase
+      .from('message_read_receipts')
+      .select('message_id, read_at')
+      .eq('user_id', user.id)
+
+    if (receiptsError) {
+      console.error('❌ Error fetching read receipts:', receiptsError)
+    }
+
+    console.log('📋 Found read receipts:', readReceipts?.length || 0)
+
+    // Create a map of message IDs to read status
+    const readMap = new Map(readReceipts?.map(r => [r.message_id, r.read_at]) || [])
+
     // Transform the data to include read status
     const transformedMessages: Message[] = messages.map((msg: any) => {
-      const readReceipt = msg.message_read_receipts?.[0]
+      const read_at = readMap.get(msg.id)
       return {
         id: msg.id,
         title: msg.title,
@@ -56,11 +68,12 @@ export const fetchMessages = async (): Promise<Message[]> => {
         admin_id: msg.admin_id,
         created_at: msg.created_at,
         updated_at: msg.updated_at,
-        is_read: !!readReceipt,
-        read_at: readReceipt?.read_at,
+        is_read: !!read_at,
+        read_at: read_at,
       }
     })
 
+    console.log('✅ Returning', transformedMessages.length, 'messages')
     return transformedMessages
   } catch (error) {
     console.error('❌ Error in fetchMessages:', error)
