@@ -71,27 +71,27 @@ export const DarkTabBar: React.FC<DarkTabBarProps> = ({ activeTab, onTabChange, 
               >
                 <View style={styles.tabContent}>
                   {/* Icon with badge */}
-                  <View style={[styles.iconContainer, isActive && styles.iconContainerActive]}>
+                  <View style={[styles.iconContainer, isActive ? styles.iconContainerActive : undefined]}>
                     <Ionicons
                       name={tab.icon}
                       size={24}
                       color={isActive ? colors.primary[500] : colors.text.tertiary}
                     />
                     {/* Badge for unread messages */}
-                    {tab.key === 'messages' && unreadMessagesCount && unreadMessagesCount > 0 && (
+                    {tab.key === 'messages' && unreadMessagesCount && unreadMessagesCount > 0 ? (
                       <View style={styles.badge}>
                         <Text style={styles.badgeText}>
                           {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
                         </Text>
                       </View>
-                    )}
+                    ) : null}
                   </View>
 
                   {/* Label */}
-                  <Text style={[styles.label, isActive && styles.labelActive]}>{tab.label}</Text>
+                  <Text style={[styles.label, isActive ? styles.labelActive : undefined]}>{tab.label}</Text>
 
                   {/* Active indicator dot */}
-                  {isActive && <View style={styles.activeDot} />}
+                  {isActive ? <View style={styles.activeDot} /> : null}
                 </View>
               </TouchableOpacity>
             )
