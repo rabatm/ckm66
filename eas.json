@@ -7,6 +7,9 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "ios": {
+        "simulator": false
+      },
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://fijixfpsmoktksozsyjd.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpaml4ZnBzbW9rdGtzb3pzeWpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyMDAwMTUsImV4cCI6MjA3NTc3NjAxNX0.XcHqCBxuSjnyJiR42B2rMgpvw7M2lb0w700DAWGb2zw"

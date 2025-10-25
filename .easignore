@@ -1,0 +1,63 @@
+# Dépendances (elles seront réinstallées pendant le build)
+node_modules/
+
+# Caches
+.expo/
+.expo-shared/
+**/__pycache__/
+*.pyc
+
+# Tests
+**/__tests__/
+**/*.test.js
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.js
+**/*.spec.ts
+**/*.spec.tsx
+coverage/
+jest.config.js
+
+# Documentation
+docs/
+*.md
+README.md
+CHANGELOG.md
+
+# Fichiers de développement
+.vscode/
+.idea/
+*.log
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Assets de développement (si vous en avez)
+mockups/
+designs/
+screenshots/
+
+# Autres builds
+android/app/build/
+ios/build/
+*.apk
+*.ipa
+*.aab
+
+# Environment files (parfois volumineux)
+.env.local
+.env.development
+
+# Storybook (si vous l'utilisez)
+.storybook/
+storybook-static/

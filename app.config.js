@@ -17,7 +17,7 @@ module.exports = {
       backgroundColor: '#ffffff',
     },
     ios: {
-      buildNumber: '3',
+      buildNumber: '4',
       supportsTablet: true,
       bundleIdentifier: 'com.ckm66.myapp',
       infoPlist: {
@@ -25,7 +25,7 @@ module.exports = {
       },
     },
     android: {
-      versionCode: 3,
+      versionCode: 4,
       adaptiveIcon: {
         foregroundImage: './src/assets/adaptive-icon.jpg',
         backgroundColor: '#ffffff',
