@@ -136,6 +136,9 @@ export const ScheduleScreen = () => {
       )
       await addEventToCalendar(calendarEvent)
 
+      // Refetch instances to update available spots count
+      await refetch()
+
       setShowBookingModal(false)
       setSelectedInstance(null)
     } catch (error) {
@@ -159,6 +162,8 @@ export const ScheduleScreen = () => {
               reservation_id: reservation.id,
               cancellation_reason: "Annulation par l'utilisateur",
             })
+            // Refetch instances to update available spots count
+            await refetch()
           } catch (error) {
             console.error('Cancellation error:', error)
           }
