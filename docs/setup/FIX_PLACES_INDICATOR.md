@@ -5,9 +5,17 @@ The available places badge was showing incorrect counts because:
 1. RLS policies restricted access to reservation data
 2. Direct count queries were blocked by `USING (auth.uid() = user_id)` policy
 3. Students could only see their own reservations, not the total
+4. Database `current_reservations` field wasn't being updated by app
 
-## Solution
-Create a secure RPC function that safely counts confirmed reservations without exposing personal details.
+## Recommended Solution
+**Use the auto-update trigger** (easiest and most reliable)
+→ See: `RESERVATION_COUNT_TRIGGER.md`
+
+The trigger automatically keeps `current_reservations` in sync with actual data.
+No app code changes needed!
+
+## Alternative Solution (if you prefer RPC)
+If you don't want to use triggers, you can create a secure RPC function that safely counts confirmed reservations without exposing personal details. Continue with the instructions below.
 
 ## Setup Instructions
 
