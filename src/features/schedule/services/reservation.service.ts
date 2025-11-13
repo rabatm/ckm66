@@ -632,32 +632,21 @@ export class ReservationService {
   }
 
   /**
-   * Increment instance reservations
+   * Increment instance reservations using RPC function
+   * (Bypasses RLS restrictions with SECURITY DEFINER)
    */
   private static async incrementInstanceReservations(instanceId: string): Promise<void> {
     try {
-      // Get current reservations count
-      const { data: instance, error: fetchError } = await supabase
-        .from('course_instances')
-        .select('current_reservations')
-        .eq('id', instanceId)
-        .single()
-
-      if (fetchError) throw fetchError
-      if (!instance) throw new Error('Instance not found')
-
-      const newCount = (instance.current_reservations || 0) + 1
-
-      const { error } = await supabase
-        .from('course_instances')
-        .update({ current_reservations: newCount })
-        .eq('id', instanceId)
+      // Use RPC function that bypasses RLS with SECURITY DEFINER
+      const { error } = await supabase.rpc('increment_instance_reservations', {
+        instance_id: instanceId,
+      })
 
       if (error) {
-        console.error('Error updating current_reservations:', error)
+        console.error(`Error incrementing reservations for instance ${instanceId}:`, error)
         throw error
       }
-      console.log(`Successfully incremented reservations for instance ${instanceId} to ${newCount}`)
+      console.log(`Successfully incremented reservations for instance ${instanceId}`)
     } catch (error) {
       console.error('Error incrementing instance reservations:', error)
       throw error
@@ -665,32 +654,21 @@ export class ReservationService {
   }
 
   /**
-   * Decrement instance reservations
+   * Decrement instance reservations using RPC function
+   * (Bypasses RLS restrictions with SECURITY DEFINER)
    */
   private static async decrementInstanceReservations(instanceId: string): Promise<void> {
     try {
-      // Get current reservations count
-      const { data: instance, error: fetchError } = await supabase
-        .from('course_instances')
-        .select('current_reservations')
-        .eq('id', instanceId)
-        .single()
-
-      if (fetchError) throw fetchError
-      if (!instance) throw new Error('Instance not found')
-
-      const newCount = Math.max((instance.current_reservations || 0) - 1, 0)
-
-      const { error } = await supabase
-        .from('course_instances')
-        .update({ current_reservations: newCount })
-        .eq('id', instanceId)
+      // Use RPC function that bypasses RLS with SECURITY DEFINER
+      const { error } = await supabase.rpc('decrement_instance_reservations', {
+        instance_id: instanceId,
+      })
 
       if (error) {
-        console.error('Error updating current_reservations:', error)
+        console.error(`Error decrementing reservations for instance ${instanceId}:`, error)
         throw error
       }
-      console.log(`Successfully decremented reservations for instance ${instanceId} to ${newCount}`)
+      console.log(`Successfully decremented reservations for instance ${instanceId}`)
     } catch (error) {
       console.error('Error decrementing instance reservations:', error)
       throw error
