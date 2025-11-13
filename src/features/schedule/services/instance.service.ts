@@ -59,18 +59,30 @@ export class InstanceService {
         (instances || []).map(async (instance) => {
           const { course, instructor, ...instanceWithoutCourse } = instance
 
-          // Get actual count of confirmed reservations from database
-          const { count: actualConfirmedCount, error: countError } = await supabase
-            .from('reservations')
-            .select('id', { count: 'exact', head: true })
-            .eq('course_instance_id', instance.id)
-            .eq('status', 'confirmed')
+          // Get actual count of confirmed reservations using RPC function
+          // (bypasses RLS restrictions on counting reservations)
+          let confirmedCount = 0
+          try {
+            const { data, error } = await supabase.rpc('count_confirmed_reservations', {
+              instance_id: instance.id,
+            })
 
-          if (countError) {
-            console.error(`Error counting reservations for instance ${instance.id}:`, countError)
+            if (error) {
+              console.warn(
+                `Error counting reservations for instance ${instance.id}:`,
+                error.message
+              )
+              // Fallback to using current_reservations from database
+              confirmedCount = instance.current_reservations || 0
+            } else {
+              confirmedCount = data || 0
+            }
+          } catch (err) {
+            console.warn(`Exception counting reservations for instance ${instance.id}:`, err)
+            // Fallback to using current_reservations from database
+            confirmedCount = instance.current_reservations || 0
           }
 
-          const confirmedCount = actualConfirmedCount || 0
           const availableSpots = instance.max_capacity - confirmedCount
 
           const result = {
@@ -149,18 +161,29 @@ export class InstanceService {
 
       if (error) throw error
 
-      // Get actual count of confirmed reservations
-      const { count: actualConfirmedCount, error: countError } = await supabase
-        .from('reservations')
-        .select('id', { count: 'exact', head: true })
-        .eq('course_instance_id', instanceId)
-        .eq('status', 'confirmed')
+      // Get actual count of confirmed reservations using RPC function
+      // (bypasses RLS restrictions on counting reservations)
+      let confirmedCount = 0
+      try {
+        const { data, error: rpcError } = await supabase.rpc('count_confirmed_reservations', {
+          instance_id: instanceId,
+        })
 
-      if (countError) {
-        console.error(`Error counting reservations for instance ${instanceId}:`, countError)
+        if (rpcError) {
+          console.warn(
+            `Error counting reservations for instance ${instanceId}:`,
+            rpcError.message
+          )
+          // Fallback to using current_reservations from database
+          confirmedCount = instance.current_reservations || 0
+        } else {
+          confirmedCount = data || 0
+        }
+      } catch (err) {
+        console.warn(`Exception counting reservations for instance ${instanceId}:`, err)
+        // Fallback to using current_reservations from database
+        confirmedCount = instance.current_reservations || 0
       }
-
-      const confirmedCount = actualConfirmedCount || 0
 
       // Use one_time_max_participants if it's a one-time course
       const maxCapacity =
