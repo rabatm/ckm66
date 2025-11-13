@@ -69,16 +69,26 @@ export class InstanceService {
 
             if (error) {
               console.warn(
-                `Error counting reservations for instance ${instance.id}:`,
-                error.message
+                `[Reservations] RPC function not available for instance ${instance.id}.`,
+                `Falling back to current_reservations field.`,
+                `Error: ${error.message}`
               )
               // Fallback to using current_reservations from database
               confirmedCount = instance.current_reservations || 0
+              console.warn(
+                `[Reservations] To enable real-time counting, create the count_confirmed_reservations function.`
+              )
+              console.warn(
+                `[Reservations] See: docs/setup/FIX_PLACES_INDICATOR.md for setup instructions.`
+              )
             } else {
               confirmedCount = data || 0
+              console.log(
+                `[Reservations] Counted ${confirmedCount} confirmed reservations for instance ${instance.id}`
+              )
             }
           } catch (err) {
-            console.warn(`Exception counting reservations for instance ${instance.id}:`, err)
+            console.warn(`[Reservations] Exception counting reservations for instance ${instance.id}:`, err)
             // Fallback to using current_reservations from database
             confirmedCount = instance.current_reservations || 0
           }
@@ -171,16 +181,26 @@ export class InstanceService {
 
         if (rpcError) {
           console.warn(
-            `Error counting reservations for instance ${instanceId}:`,
-            rpcError.message
+            `[Reservations] RPC function not available for instance ${instanceId}.`,
+            `Falling back to current_reservations field.`,
+            `Error: ${rpcError.message}`
           )
           // Fallback to using current_reservations from database
           confirmedCount = instance.current_reservations || 0
+          console.warn(
+            `[Reservations] To enable real-time counting, create the count_confirmed_reservations function.`
+          )
+          console.warn(
+            `[Reservations] See: docs/setup/FIX_PLACES_INDICATOR.md for setup instructions.`
+          )
         } else {
           confirmedCount = data || 0
+          console.log(
+            `[Reservations] Counted ${confirmedCount} confirmed reservations for instance ${instanceId}`
+          )
         }
       } catch (err) {
-        console.warn(`Exception counting reservations for instance ${instanceId}:`, err)
+        console.warn(`[Reservations] Exception counting reservations for instance ${instanceId}:`, err)
         // Fallback to using current_reservations from database
         confirmedCount = instance.current_reservations || 0
       }
