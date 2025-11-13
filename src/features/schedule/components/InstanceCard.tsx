@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { DarkCard } from '@/components/ui'
@@ -6,6 +6,7 @@ import { colors, spacing, typography } from '@/theme'
 import type { CourseInstanceWithDetails } from '../types'
 import { formatTimeRange } from '../types'
 import { StudentsListModal } from './StudentsListModal'
+import { useInstanceReservations } from '../hooks'
 
 interface InstanceCardProps {
   instance: CourseInstanceWithDetails
@@ -31,6 +32,16 @@ export function InstanceCard({
   const isFull = instance.is_full || false
   const isAlmostFull = availableSpots <= 3 && availableSpots > 0
   const userReservation = instance.user_reservation
+
+  // Get confirmed students count for instructors
+  const { data: allReservations } = useInstanceReservations(isInstructor ? instance.id : '')
+
+  const confirmedStudentsCount = useMemo(() => {
+    if (!allReservations) return 0
+    return allReservations.filter((res: any) => res.status === 'confirmed').length
+  }, [allReservations])
+
+  const maxCapacity = instance.max_capacity || 0
 
   const getSpotsColor = () => {
     if (isFull) return colors.error
@@ -138,14 +149,16 @@ export function InstanceCard({
         {showActions && (
           <View style={styles.footer}>
             {isInstructor ? (
-              // Instructor View: Show students button
+              // Instructor View: Show students button with count
               <TouchableOpacity
                 style={[styles.actionButton, styles.studentsButton]}
                 onPress={() => setShowStudentsModal(true)}
                 activeOpacity={0.7}
               >
                 <Ionicons name="people" size={16} color={colors.primary[500]} />
-                <Text style={styles.studentsButtonText}>Voir les élèves inscrits</Text>
+                <Text style={styles.studentsButtonText}>
+                  Voir les élèves inscrits ({confirmedStudentsCount}/{maxCapacity})
+                </Text>
               </TouchableOpacity>
             ) : (
               // Student View: Show spots and book/cancel buttons
