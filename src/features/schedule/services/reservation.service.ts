@@ -56,7 +56,6 @@ export class ReservationService {
           }
         }
 
-        console.log('✅ Found active subscription:', subscription.id)
         // 3. Check expiration
         if (new Date(subscription.end_date) < new Date()) {
           return {
@@ -361,7 +360,7 @@ export class ReservationService {
             .in('id', subscriptionIds)
 
           if (subscriptionsError) {
-            console.warn('Error fetching subscriptions:', subscriptionsError)
+            // Handle gracefully with empty subscriptionMap
           }
 
           const subscriptionMap = new Map(subscriptions?.map((sub) => [sub.id, sub]) || [])
@@ -643,10 +642,9 @@ export class ReservationService {
       })
 
       if (error) {
-        console.error(`Error incrementing reservations for instance ${instanceId}:`, error)
+        console.error('Error incrementing reservations:', error)
         throw error
       }
-      console.log(`Successfully incremented reservations for instance ${instanceId}`)
     } catch (error) {
       console.error('Error incrementing instance reservations:', error)
       throw error
@@ -665,10 +663,9 @@ export class ReservationService {
       })
 
       if (error) {
-        console.error(`Error decrementing reservations for instance ${instanceId}:`, error)
+        console.error('Error decrementing reservations:', error)
         throw error
       }
-      console.log(`Successfully decremented reservations for instance ${instanceId}`)
     } catch (error) {
       console.error('Error decrementing instance reservations:', error)
       throw error
