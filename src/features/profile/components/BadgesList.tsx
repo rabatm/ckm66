@@ -1,15 +1,16 @@
-import React from 'react'
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native'
+import React, { useState } from 'react'
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, typography } from '@/theme'
 import type { BadgeWithProgress } from '../services/badge.service'
+import { BadgeDetailModal } from './BadgeDetailModal'
 
 interface BadgesListProps {
   badges: BadgeWithProgress[]
   isLoading: boolean
 }
 
-const BadgeItem: React.FC<{ badge: BadgeWithProgress }> = ({ badge }) => {
+const BadgeItem: React.FC<{ badge: BadgeWithProgress; onPress: () => void }> = ({ badge, onPress }) => {
   // Map category to display name
   const categoryLabels: Record<string, string> = {
     assiduity: '📊 Assiduité',
@@ -24,7 +25,7 @@ const BadgeItem: React.FC<{ badge: BadgeWithProgress }> = ({ badge }) => {
   }
 
   return (
-    <View style={styles.badgeItem}>
+    <TouchableOpacity style={styles.badgeItem} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.badgeIcon}>
         <Text style={styles.emoji}>{badge.icon_emoji}</Text>
       </View>
@@ -50,11 +51,12 @@ const BadgeItem: React.FC<{ badge: BadgeWithProgress }> = ({ badge }) => {
           <Ionicons name="checkmark-circle" size={24} color={colors.primary[500]} />
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   )
 }
 
 export const BadgesList: React.FC<BadgesListProps> = ({ badges, isLoading }) => {
+  const [selectedBadge, setSelectedBadge] = useState<BadgeWithProgress | null>(null)
   const unlockedBadges = badges.filter(b => b.is_unlocked)
 
   if (isLoading) {
@@ -86,10 +88,19 @@ export const BadgesList: React.FC<BadgesListProps> = ({ badges, isLoading }) => 
 
       <FlatList
         data={unlockedBadges}
-        renderItem={({ item }) => <BadgeItem badge={item} />}
+        renderItem={({ item }) => (
+          <BadgeItem badge={item} onPress={() => setSelectedBadge(item)} />
+        )}
         keyExtractor={item => item.id}
         scrollEnabled={false}
         contentContainerStyle={styles.listContent}
+      />
+
+      {/* Badge Detail Modal */}
+      <BadgeDetailModal
+        visible={selectedBadge !== null}
+        badge={selectedBadge}
+        onClose={() => setSelectedBadge(null)}
       />
     </View>
   )
