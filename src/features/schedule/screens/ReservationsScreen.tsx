@@ -13,11 +13,6 @@ export const ReservationsScreen = () => {
   const insets = useSafeAreaInsets()
   const { data: reservations, isLoading, error } = useReservationsGrouped(user?.id || '')
 
-  console.log('ReservationsScreen - User:', user)
-  console.log('ReservationsScreen - User ID:', user?.id)
-  console.log('ReservationsScreen - Reservations:', reservations)
-  console.log('ReservationsScreen - Error:', error)
-
   // Helper function to get course title
   const getCourseTitle = (reservation: any) => {
     // For one-time courses, title is in reservation.course
