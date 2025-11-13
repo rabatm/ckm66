@@ -1,11 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { DarkCard } from '@/components/ui'
 import { colors, spacing, typography } from '@/theme'
 import type { CourseInstanceWithDetails } from '../types'
 import { formatTimeRange } from '../types'
-import { ReservedStudentsList } from './ReservedStudentsList'
+import { StudentsListModal } from './StudentsListModal'
 
 interface InstanceCardProps {
   instance: CourseInstanceWithDetails
@@ -26,6 +26,7 @@ export function InstanceCard({
   showDate = true,
   isInstructor = false,
 }: InstanceCardProps) {
+  const [showStudentsModal, setShowStudentsModal] = useState(false)
   const availableSpots = instance.available_spots || 0
   const isFull = instance.is_full || false
   const isAlmostFull = availableSpots <= 3 && availableSpots > 0
@@ -136,42 +137,66 @@ export function InstanceCard({
         {/* Footer */}
         {showActions && (
           <View style={styles.footer}>
-            <View style={styles.spotsContainer}>
-              <Ionicons
-                name={isFull ? 'close-circle' : 'people'}
-                size={16}
-                color={getSpotsColor()}
-              />
-              <Text style={[styles.spotsText, { color: getSpotsColor() }]}>
-                {isFull ? 'Complet' : `${availableSpots} place${availableSpots > 1 ? 's' : ''}`}
-              </Text>
-            </View>
+            {isInstructor ? (
+              // Instructor View: Show students button
+              <TouchableOpacity
+                style={[styles.actionButton, styles.studentsButton]}
+                onPress={() => setShowStudentsModal(true)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="people" size={16} color={colors.primary[500]} />
+                <Text style={styles.studentsButtonText}>Voir les élèves inscrits</Text>
+              </TouchableOpacity>
+            ) : (
+              // Student View: Show spots and book/cancel buttons
+              <>
+                <View style={styles.spotsContainer}>
+                  <Ionicons
+                    name={isFull ? 'close-circle' : 'people'}
+                    size={16}
+                    color={getSpotsColor()}
+                  />
+                  <Text style={[styles.spotsText, { color: getSpotsColor() }]}>
+                    {isFull ? 'Complet' : `${availableSpots} place${availableSpots > 1 ? 's' : ''}`}
+                  </Text>
+                </View>
 
-            {userReservation && userReservation.status !== 'cancelled' ? (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.cancelButton]}
-                onPress={onCancel}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.actionButtonText, { color: colors.error }]}>Annuler</Text>
-              </TouchableOpacity>
-            ) : !userReservation ? (
-              <TouchableOpacity
-                style={[styles.actionButton, isFull && styles.waitlistButton]}
-                onPress={onBook}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.actionButtonText}>
-                  {isFull ? "Liste d'attente" : 'Réserver'}
-                </Text>
-              </TouchableOpacity>
-            ) : null}
+                {userReservation && userReservation.status !== 'cancelled' ? (
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.cancelButton]}
+                    onPress={onCancel}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.actionButtonText, { color: colors.error }]}>Annuler</Text>
+                  </TouchableOpacity>
+                ) : !userReservation ? (
+                  <TouchableOpacity
+                    style={[styles.actionButton, isFull && styles.waitlistButton]}
+                    onPress={onBook}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.actionButtonText}>
+                      {isFull ? "Liste d'attente" : 'Réserver'}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+              </>
+            )}
           </View>
         )}
 
-        {/* Instructor View: Reserved Students List */}
+        {/* Students List Modal */}
         {isInstructor && (
-          <ReservedStudentsList courseInstanceId={instance.id} />
+          <StudentsListModal
+            visible={showStudentsModal}
+            courseInstanceId={instance.id}
+            courseName={
+              instance.is_one_time
+                ? instance.one_time_title || 'Cours ponctuel'
+                : instance.course?.title || 'Cours'
+            }
+            onClose={() => setShowStudentsModal(false)}
+          />
         )}
       </DarkCard>
     </TouchableOpacity>
@@ -282,5 +307,19 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.semibold,
     color: colors.text.primary,
+  },
+  studentsButton: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: colors.background.secondary,
+    borderWidth: 1,
+    borderColor: colors.primary[500],
+    gap: spacing.sm,
+    justifyContent: 'center',
+  },
+  studentsButtonText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.primary[500],
   },
 })
