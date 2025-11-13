@@ -54,6 +54,17 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
       case 'infos':
         return (
           <>
+            {/* Profile Header - Picture, Name, Email */}
+            <ProfileHeader
+              firstName={user?.first_name || ''}
+              lastName={user?.last_name || ''}
+              email={user?.email || ''}
+              profilePictureUrl={getProfilePictureUrl(user?.profile_picture_url)}
+              joinDate={user?.join_date || ''}
+              isUploadingPhoto={isUploadingPhoto}
+              onChangePhoto={handleChangePhoto}
+            />
+
             {/* Level Progress */}
             {!isLoading && userProgress && (
               <View style={styles.section}>
@@ -70,6 +81,27 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
                 isLoading={isLoadingSubscription}
                 user={user}
               />
+            </View>
+
+            {/* Actions */}
+            <View style={styles.section}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => setShowEditModal(true)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="pencil" size={18} color={colors.text.primary} />
+                <Text style={styles.actionButtonText}>Modifier mes informations</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.logoutButton]}
+                onPress={handleLogout}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="log-out-outline" size={18} color={colors.error} />
+                <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Se déconnecter</Text>
+              </TouchableOpacity>
             </View>
           </>
         )
@@ -197,17 +229,6 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
           paddingBottom: Math.max(insets.bottom + 120, spacing['5xl'] + 60),
         }}
       >
-        {/* Profile Header */}
-        <ProfileHeader
-          firstName={user?.first_name || ''}
-          lastName={user?.last_name || ''}
-          email={user?.email || ''}
-          profilePictureUrl={getProfilePictureUrl(user?.profile_picture_url)}
-          joinDate={user?.join_date || ''}
-          isUploadingPhoto={isUploadingPhoto}
-          onChangePhoto={handleChangePhoto}
-        />
-
         {/* Profile Sub-Tabs */}
         <View style={styles.subTabsContainer}>
           <TouchableOpacity
@@ -276,27 +297,6 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
         ) : (
           renderProfileContent()
         )}
-
-        {/* Actions */}
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => setShowEditModal(true)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="pencil" size={18} color={colors.text.primary} />
-            <Text style={styles.actionButtonText}>Modifier mes informations</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.logoutButton]}
-            onPress={handleLogout}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="log-out-outline" size={18} color={colors.error} />
-            <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Se déconnecter</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
 
       {/* Edit Profile Modal */}
