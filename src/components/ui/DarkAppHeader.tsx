@@ -126,12 +126,27 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
 
             {/* User info */}
             <View style={styles.userInfo}>
-              <Text style={styles.name}>{firstName}</Text>
-              <View style={styles.levelContainer}>
-                <View style={[styles.levelDot, { backgroundColor: levelInfo.color }]} />
-                <Text style={styles.levelText}>{levelInfo.title}</Text>
-                <Text style={styles.pointsText}>• {totalPoints} pts</Text>
+              <View style={styles.nameRow}>
+                <Text style={styles.name}>{firstName}</Text>
+                {user?.role === 'instructor' && (
+                  <View style={styles.instructorBadge}>
+                    <Ionicons name="school" size={12} color="#fff" />
+                    <Text style={styles.instructorBadgeText}>Instructeur</Text>
+                  </View>
+                )}
               </View>
+              {user?.role === 'instructor' ? (
+                <View style={styles.levelContainer}>
+                  <View style={styles.instructorDot} />
+                  <Text style={styles.instructorTitle}>Responsable des cours</Text>
+                </View>
+              ) : (
+                <View style={styles.levelContainer}>
+                  <View style={[styles.levelDot, { backgroundColor: levelInfo.color }]} />
+                  <Text style={styles.levelText}>{levelInfo.title}</Text>
+                  <Text style={styles.pointsText}>• {totalPoints} pts</Text>
+                </View>
+              )}
             </View>
 
           </View>
@@ -247,11 +262,30 @@ const styles = StyleSheet.create({
   userInfo: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: 4,
+  },
   name: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
     color: colors.text.primary,
-    marginBottom: 2,
+  },
+  instructorBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  instructorBadgeText: {
+    fontSize: 10,
+    fontWeight: typography.weights.semibold,
+    color: '#fff',
   },
   levelContainer: {
     flexDirection: 'row',
@@ -263,10 +297,22 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     marginRight: spacing.xs,
   },
+  instructorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F59E0B',
+    marginRight: spacing.xs,
+  },
   levelText: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.medium,
     color: colors.text.secondary,
+  },
+  instructorTitle: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.medium,
+    color: '#F59E0B',
   },
   pointsText: {
     fontSize: typography.sizes.xs,
