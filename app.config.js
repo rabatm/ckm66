@@ -4,7 +4,7 @@ module.exports = {
   expo: {
     name: 'CKM66',
     slug: 'ckm66',
-    version: '1.0.2',
+    version: '1.0.3',
     orientation: 'portrait',
     icon: './src/assets/icon.jpg',
     userInterfaceStyle: 'automatic',
@@ -17,19 +17,24 @@ module.exports = {
       backgroundColor: '#ffffff',
     },
     ios: {
-      buildNumber: '4',
+      buildNumber: '5',
       supportsTablet: true,
       bundleIdentifier: 'com.ckm66.myapp',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSCameraUsageDescription:
+          "Prenez une photo maintenant pour l'utiliser comme photo de profil.",
+        NSPhotoLibraryUsageDescription:
+          'Choisissez une photo dans votre bibliothèque pour la définir comme photo de profil.',
       },
     },
     android: {
-      versionCode: 4,
+      versionCode: 5,
       adaptiveIcon: {
         foregroundImage: './src/assets/adaptive-icon.jpg',
         backgroundColor: '#ffffff',
       },
+      permissions: ['CAMERA', 'READ_MEDIA_IMAGES'],
       package: 'com.ckm66.myapp',
       navigationBar: {
         visible: true,

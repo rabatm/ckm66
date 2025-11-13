@@ -231,6 +231,7 @@ export const ScheduleScreen = () => {
                       ? { onCancel: () => handleCancelReservation(instance) }
                       : { onBook: () => handleBookInstance(instance) })}
                     showDate={true}
+                    isInstructor={user?.role === 'instructor'}
                   />
                 ))
               )}

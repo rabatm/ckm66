@@ -5,6 +5,7 @@ import { DarkCard } from '@/components/ui'
 import { colors, spacing, typography } from '@/theme'
 import type { CourseInstanceWithDetails } from '../types'
 import { formatTimeRange } from '../types'
+import { ReservedStudentsList } from './ReservedStudentsList'
 
 interface InstanceCardProps {
   instance: CourseInstanceWithDetails
@@ -13,6 +14,7 @@ interface InstanceCardProps {
   onViewDetails?: () => void
   showActions?: boolean
   showDate?: boolean
+  isInstructor?: boolean
 }
 
 export function InstanceCard({
@@ -22,6 +24,7 @@ export function InstanceCard({
   onViewDetails,
   showActions = true,
   showDate = true,
+  isInstructor = false,
 }: InstanceCardProps) {
   const availableSpots = instance.available_spots || 0
   const isFull = instance.is_full || false
@@ -164,6 +167,11 @@ export function InstanceCard({
               </TouchableOpacity>
             ) : null}
           </View>
+        )}
+
+        {/* Instructor View: Reserved Students List */}
+        {isInstructor && (
+          <ReservedStudentsList courseInstanceId={instance.id} />
         )}
       </DarkCard>
     </TouchableOpacity>
