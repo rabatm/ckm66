@@ -116,6 +116,18 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
                 <LevelProgressCard userProgress={userProgress} />
               </View>
             )}
+
+            {/* Badges Progress */}
+            {!isLoading && userProgress && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Badges</Text>
+                <BadgeStatsCard
+                  unlockedBadges={userProgress.unlocked_badges}
+                  totalBadges={userProgress.total_badges}
+                  badgesPercentage={userProgress.badges_percentage}
+                />
+              </View>
+            )}
           </>
         )
 

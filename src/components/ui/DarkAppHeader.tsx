@@ -8,7 +8,6 @@ import type { UserLevel } from '@/features/profile/types/badge.types'
 import { LEVELS } from '@/features/profile/types/badge.types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useNextReservation } from '@/features/schedule/hooks/useNextReservation'
-import { useBadges } from '@/features/profile/hooks/useBadges'
 import { formatTimeRange, getDayName } from '@/features/schedule/types/course.types'
 import type { Reservation } from '@/features/schedule/types/reservation.types'
 
@@ -18,7 +17,6 @@ interface DarkAppHeaderProps {
   level?: UserLevel
   totalPoints?: number
   onReservationPress?: () => void
-  onBadgesPress?: () => void
 }
 
 /**
@@ -65,24 +63,10 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
   level = 1,
   totalPoints = 0,
   onReservationPress,
-  onBadgesPress,
 }) => {
   const { user } = useAuth()
   const { nextReservation } = useNextReservation(user?.id || '')
-  const { badges, userProgress } = useBadges()
   const levelInfo = LEVELS[level]
-
-  // Get the most recent badge unlocked
-  const lastBadge = useMemo(() => {
-    const unlockedBadges = badges
-      .filter((badge) => badge.is_unlocked && badge.unlocked_at)
-      .sort((a, b) => {
-        const dateA = new Date(a.unlocked_at!).getTime()
-        const dateB = new Date(b.unlocked_at!).getTime()
-        return dateB - dateA
-      })
-    return unlockedBadges[0] || null
-  }, [badges])
 
   // Memoized formatted next reservation info
   const nextReservationText = useMemo(() => {
@@ -114,17 +98,6 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
     return `${dateLabel} - ${courseTitle} ${timeRange}`
   }, [nextReservation])
 
-  // Memoized badges progress text
-  const badgesProgressText = useMemo(() => {
-    if (!userProgress) {
-      return { unlocked: 0, total: 0, percentage: 0 }
-    }
-    return {
-      unlocked: userProgress.unlocked_badges,
-      total: userProgress.total_badges,
-      percentage: userProgress.badges_percentage,
-    }
-  }, [userProgress])
 
   return (
     <View style={styles.container}>
@@ -161,13 +134,6 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
               </View>
             </View>
 
-            {/* Last Badge Display */}
-            {lastBadge && (
-              <View style={styles.lastBadgeContainer}>
-                <Text style={styles.lastBadgeEmoji}>{lastBadge.icon_emoji}</Text>
-                <Text style={styles.lastBadgePoints}>+{lastBadge.points}</Text>
-              </View>
-            )}
           </View>
 
           {/* Next Reservation - Clickable Priority Action */}
@@ -198,47 +164,6 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
             </View>
           </TouchableOpacity>
 
-          {/* Badges Card - Clickable Navigation to Profile/Badges */}
-          <TouchableOpacity
-            style={[
-              styles.badgesCard,
-              {
-                backgroundColor:
-                  Platform.OS === 'ios'
-                    ? 'rgba(251, 146, 60, 0.1)'
-                    : 'rgba(251, 146, 60, 0.15)',
-                borderWidth: Platform.OS === 'ios' ? 0.5 : 0,
-                borderColor: 'rgba(251, 146, 60, 0.4)',
-              },
-            ]}
-            onPress={onBadgesPress}
-            activeOpacity={0.7}
-            disabled={!onBadgesPress}
-          >
-            <View style={styles.badgesContent}>
-              <View style={styles.badgesHeader}>
-                <Ionicons name="trophy-outline" size={18} color="#FB923C" />
-                <Text style={styles.badgesTitle}>Badges</Text>
-              </View>
-              <Text style={styles.badgesValue}>
-                {badgesProgressText.unlocked}/{badgesProgressText.total} Débloqués
-              </Text>
-              <View style={styles.progressBar}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    {
-                      width: `${badgesProgressText.percentage}%`,
-                      backgroundColor: '#FB923C',
-                    },
-                  ]}
-                />
-              </View>
-            </View>
-            {onBadgesPress && (
-              <Ionicons name="chevron-forward" size={20} color="#FB923C" />
-            )}
-          </TouchableOpacity>
         </LinearGradient>
       </BlurView>
     </View>
@@ -348,26 +273,6 @@ const styles = StyleSheet.create({
     color: colors.text.tertiary,
     marginLeft: spacing.xs,
   },
-  // Last Badge Display (in header)
-  lastBadgeContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 10,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderWidth: Platform.OS === 'ios' ? 0.5 : 0,
-    borderColor: 'rgba(185, 28, 28, 0.3)',
-  },
-  lastBadgeEmoji: {
-    fontSize: 24,
-  },
-  lastBadgePoints: {
-    fontSize: 10,
-    fontWeight: typography.weights.bold,
-    color: colors.primary[500],
-    marginTop: 2,
-  },
   // Next Reservation Card - Priority Action
   nextReservationCard: {
     marginHorizontal: spacing.lg,
@@ -394,47 +299,5 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.semibold,
     color: colors.text.primary,
-  },
-  // Badges Card - Tab Effect Navigation
-  badgesCard: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.sm,
-    borderRadius: 12,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.sm,
-    gap: spacing.sm,
-    shadowColor: '#FB923C',
-  },
-  badgesContent: {
-    flex: 1,
-  },
-  badgesHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  badgesTitle: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.text.primary,
-  },
-  badgesValue: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.text.primary,
-    marginBottom: spacing.xs,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: 'rgba(251, 146, 60, 0.2)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
   },
 })

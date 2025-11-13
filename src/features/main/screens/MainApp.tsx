@@ -17,7 +17,7 @@ export const MainApp = () => {
   const { user } = useAuth()
   const { userProgress } = useBadges()
   const { unreadCount } = useUnreadMessages()
-  const { activeTab, setActiveTab, setActiveProfileTab } = useNavigation()
+  const { activeTab, setActiveTab } = useNavigation()
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -34,11 +34,6 @@ export const MainApp = () => {
     }
   }
 
-  const handleBadgesPress = () => {
-    setActiveTab('profile')
-    setActiveProfileTab('badges')
-  }
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Glass App Header */}
@@ -49,7 +44,6 @@ export const MainApp = () => {
         {...(userProgress?.total_points !== undefined
           ? { totalPoints: userProgress.total_points }
           : {})}
-        onBadgesPress={handleBadgesPress}
       />
 
       {/* Tab Content */}
