@@ -54,31 +54,49 @@ export class InstanceService {
 
       if (instancesError) throw instancesError
 
-      // Enrich instances with available_spots and is_full
-      const enrichedInstances: CourseInstanceWithDetails[] = (instances || []).map((instance) => {
-        const { course, instructor, ...instanceWithoutCourse } = instance
-        const availableSpots = instance.max_capacity - instance.current_reservations
-        const result = {
-          ...instanceWithoutCourse,
-          status: instance.status as InstanceStatus,
-          is_exceptional: instance.is_exceptional || false,
-          is_one_time: instance.is_one_time || false,
-          available_spots: availableSpots,
-          is_full: availableSpots <= 0,
-        } as CourseInstanceWithDetails
-        if (course) {
-          result.course = course
-        }
-        if (instructor && typeof instructor === 'object' && 'id' in instructor) {
-          result.instructor = instructor as {
-            id: string
-            first_name: string
-            last_name: string
-            profile_picture_url: string | null
+      // Enrich instances with correct reservation counts and available_spots
+      const enrichedInstances: CourseInstanceWithDetails[] = await Promise.all(
+        (instances || []).map(async (instance) => {
+          const { course, instructor, ...instanceWithoutCourse } = instance
+
+          // Get actual count of confirmed reservations from database
+          const { count: actualConfirmedCount, error: countError } = await supabase
+            .from('reservations')
+            .select('id', { count: 'exact', head: true })
+            .eq('course_instance_id', instance.id)
+            .eq('status', 'confirmed')
+
+          if (countError) {
+            console.error(`Error counting reservations for instance ${instance.id}:`, countError)
           }
-        }
-        return result as CourseInstanceWithDetails
-      })
+
+          const confirmedCount = actualConfirmedCount || 0
+          const availableSpots = instance.max_capacity - confirmedCount
+
+          const result = {
+            ...instanceWithoutCourse,
+            status: instance.status as InstanceStatus,
+            is_exceptional: instance.is_exceptional || false,
+            is_one_time: instance.is_one_time || false,
+            current_reservations: confirmedCount, // Override with actual count
+            available_spots: availableSpots,
+            is_full: availableSpots <= 0,
+          } as CourseInstanceWithDetails
+
+          if (course) {
+            result.course = course
+          }
+          if (instructor && typeof instructor === 'object' && 'id' in instructor) {
+            result.instructor = instructor as {
+              id: string
+              first_name: string
+              last_name: string
+              profile_picture_url: string | null
+            }
+          }
+          return result as CourseInstanceWithDetails
+        })
+      )
 
       // Enrich all instances with user reservations if userId provided
       const enrichedInstancesWithReservations: CourseInstanceWithDetails[] = await Promise.all(
@@ -131,6 +149,19 @@ export class InstanceService {
 
       if (error) throw error
 
+      // Get actual count of confirmed reservations
+      const { count: actualConfirmedCount, error: countError } = await supabase
+        .from('reservations')
+        .select('id', { count: 'exact', head: true })
+        .eq('course_instance_id', instanceId)
+        .eq('status', 'confirmed')
+
+      if (countError) {
+        console.error(`Error counting reservations for instance ${instanceId}:`, countError)
+      }
+
+      const confirmedCount = actualConfirmedCount || 0
+
       // Use one_time_max_participants if it's a one-time course
       const maxCapacity =
         (instance as { is_one_time?: boolean }).is_one_time &&
@@ -139,10 +170,11 @@ export class InstanceService {
           ? (instance as { one_time_max_participants: number }).one_time_max_participants
           : instance.max_capacity
 
-      const availableSpots = maxCapacity - instance.current_reservations
+      const availableSpots = maxCapacity - confirmedCount
 
       const result = {
         ...instance,
+        current_reservations: confirmedCount, // Override with actual count
         available_spots: availableSpots,
         is_full: availableSpots <= 0,
       }
