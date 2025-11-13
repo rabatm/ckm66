@@ -19,11 +19,8 @@ export const fetchMessages = async (): Promise<Message[]> => {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      console.log('⚠️ User not authenticated')
       return []
     }
-
-    console.log('📬 Fetching messages for user:', user.id)
 
     // Get all messages
     const { data: messages, error: messagesError } = await supabase
@@ -36,10 +33,7 @@ export const fetchMessages = async (): Promise<Message[]> => {
       return []
     }
 
-    console.log('📦 Found messages:', messages?.length || 0)
-
     if (!messages || messages.length === 0) {
-      console.log('ℹ️ No messages found')
       return []
     }
 
@@ -52,8 +46,6 @@ export const fetchMessages = async (): Promise<Message[]> => {
     if (receiptsError) {
       console.error('❌ Error fetching read receipts:', receiptsError)
     }
-
-    console.log('📋 Found read receipts:', readReceipts?.length || 0)
 
     // Create a map of message IDs to read status
     const readMap = new Map(readReceipts?.map(r => [r.message_id, r.read_at]) || [])
@@ -73,7 +65,6 @@ export const fetchMessages = async (): Promise<Message[]> => {
       }
     })
 
-    console.log('✅ Returning', transformedMessages.length, 'messages')
     return transformedMessages
   } catch (error) {
     console.error('❌ Error in fetchMessages:', error)
@@ -89,7 +80,6 @@ export const markMessageAsRead = async (messageId: string): Promise<boolean> => 
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      console.log('⚠️ User not authenticated')
       return false
     }
 
@@ -114,7 +104,6 @@ export const markMessageAsRead = async (messageId: string): Promise<boolean> => 
       return false
     }
 
-    console.log('✅ Message marked as read:', messageId)
     return true
   } catch (error) {
     console.error('❌ Error in markMessageAsRead:', error)
