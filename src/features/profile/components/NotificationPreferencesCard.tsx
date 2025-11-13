@@ -65,7 +65,6 @@ export const NotificationPreferencesCard: React.FC<NotificationPreferencesCardPr
 
       if (error) throw error
 
-      console.log(`✅ ${key} updated to ${value}`)
       onUpdate?.()
     } catch (error) {
       console.error(`Error updating ${key}:`, error)

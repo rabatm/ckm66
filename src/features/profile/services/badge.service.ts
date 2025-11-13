@@ -82,7 +82,6 @@ export async function fetchBadgesWithProgress(userId: string): Promise<BadgeWith
 
   // If no profile exists, return badges without progress
   if (!profile) {
-    console.warn(`No profile found for user ${userId}`)
     return allBadges.map((badge) => ({
       ...badge,
       is_unlocked: false,
