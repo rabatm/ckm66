@@ -28,10 +28,6 @@ export function InstanceCard({
   isInstructor = false,
 }: InstanceCardProps) {
   const [showStudentsModal, setShowStudentsModal] = useState(false)
-  const availableSpots = instance.available_spots || 0
-  const isFull = instance.is_full || false
-  const isAlmostFull = availableSpots <= 3 && availableSpots > 0
-  const userReservation = instance.user_reservation
 
   // Get confirmed students count for instructors
   const { data: allReservations } = useInstanceReservations(isInstructor ? instance.id : '')
@@ -42,6 +38,14 @@ export function InstanceCard({
   }, [allReservations])
 
   const maxCapacity = instance.max_capacity || 0
+
+  // Calculate available spots based on confirmed reservations only
+  const currentReservations = instance.current_reservations || 0
+  const availableSpots = Math.max(maxCapacity - currentReservations, 0)
+
+  const isFull = availableSpots <= 0
+  const isAlmostFull = availableSpots <= 3 && availableSpots > 0
+  const userReservation = instance.user_reservation
 
   const getSpotsColor = () => {
     if (isFull) return colors.error

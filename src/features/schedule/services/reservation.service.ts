@@ -644,6 +644,7 @@ export class ReservationService {
         .single()
 
       if (fetchError) throw fetchError
+      if (!instance) throw new Error('Instance not found')
 
       const newCount = (instance.current_reservations || 0) + 1
 
@@ -652,9 +653,14 @@ export class ReservationService {
         .update({ current_reservations: newCount })
         .eq('id', instanceId)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error updating current_reservations:', error)
+        throw error
+      }
+      console.log(`Successfully incremented reservations for instance ${instanceId} to ${newCount}`)
     } catch (error) {
       console.error('Error incrementing instance reservations:', error)
+      throw error
     }
   }
 
@@ -671,6 +677,7 @@ export class ReservationService {
         .single()
 
       if (fetchError) throw fetchError
+      if (!instance) throw new Error('Instance not found')
 
       const newCount = Math.max((instance.current_reservations || 0) - 1, 0)
 
@@ -679,9 +686,14 @@ export class ReservationService {
         .update({ current_reservations: newCount })
         .eq('id', instanceId)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error updating current_reservations:', error)
+        throw error
+      }
+      console.log(`Successfully decremented reservations for instance ${instanceId} to ${newCount}`)
     } catch (error) {
       console.error('Error decrementing instance reservations:', error)
+      throw error
     }
   }
 }
