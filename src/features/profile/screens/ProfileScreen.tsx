@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, spacing, typography } from '@/theme'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useNavigation } from '@/context/NavigationContext'
 import { useBadges } from '../hooks/useBadges'
 import { useSubscription } from '../hooks/useSubscription'
 import { uploadProfilePicture, getProfilePictureUrl } from '../services/profile.service'
@@ -30,10 +31,9 @@ interface ProfileScreenProps {
   onBack?: () => void
 }
 
-type ProfileTabType = 'info' | 'badges' | 'notifications'
-
 export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
   const { user, signOut, updateUser } = useAuth()
+  const { activeProfileTab, setActiveProfileTab } = useNavigation()
   const insets = useSafeAreaInsets()
   const { userProgress, badges, isLoading, refetch: refetchBadges } = useBadges()
   const {
@@ -43,7 +43,6 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
   } = useSubscription()
   const [showEditModal, setShowEditModal] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
-  const [activeProfileTab, setActiveProfileTab] = useState<ProfileTabType>('info')
 
   const handleRefresh = () => {
     refetchBadges()
@@ -52,7 +51,7 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
 
   const renderProfileContent = () => {
     switch (activeProfileTab) {
-      case 'info':
+      case 'infos':
         return (
           <>
             {/* Level Progress */}
@@ -75,23 +74,24 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
           </>
         )
 
+      case 'progression':
+        return (
+          <>
+            {/* Level Progress - Full View */}
+            {!isLoading && userProgress && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Votre Progression</Text>
+                <LevelProgressCard userProgress={userProgress} />
+              </View>
+            )}
+          </>
+        )
+
       case 'badges':
         return (
           <>
             {/* Badges List */}
             <BadgesList badges={badges} isLoading={isLoading} />
-          </>
-        )
-
-      case 'notifications':
-        return (
-          <>
-            {/* Notification Preferences */}
-            {user?.id && (
-              <View style={styles.section}>
-                <NotificationPreferencesCard userId={user.id} onUpdate={handleRefresh} />
-              </View>
-            )}
           </>
         )
 
@@ -211,21 +211,40 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
         {/* Profile Sub-Tabs */}
         <View style={styles.subTabsContainer}>
           <TouchableOpacity
-            style={[styles.subTab, activeProfileTab === 'info' && styles.subTabActive]}
-            onPress={() => setActiveProfileTab('info')}
+            style={[styles.subTab, activeProfileTab === 'infos' && styles.subTabActive]}
+            onPress={() => setActiveProfileTab('infos')}
           >
             <Ionicons
               name="information-circle-outline"
               size={20}
-              color={activeProfileTab === 'info' ? colors.primary[500] : colors.text.tertiary}
+              color={activeProfileTab === 'infos' ? colors.primary[500] : colors.text.tertiary}
             />
             <Text
               style={[
                 styles.subTabLabel,
-                activeProfileTab === 'info' && styles.subTabLabelActive,
+                activeProfileTab === 'infos' && styles.subTabLabelActive,
               ]}
             >
               Infos
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.subTab, activeProfileTab === 'progression' && styles.subTabActive]}
+            onPress={() => setActiveProfileTab('progression')}
+          >
+            <Ionicons
+              name="trending-up-outline"
+              size={20}
+              color={activeProfileTab === 'progression' ? colors.primary[500] : colors.text.tertiary}
+            />
+            <Text
+              style={[
+                styles.subTabLabel,
+                activeProfileTab === 'progression' && styles.subTabLabelActive,
+              ]}
+            >
+              Progression
             </Text>
           </TouchableOpacity>
 
@@ -247,31 +266,10 @@ export function ProfileScreen({ onBack: _onBack }: ProfileScreenProps) {
               Badges
             </Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.subTab, activeProfileTab === 'notifications' && styles.subTabActive]}
-            onPress={() => setActiveProfileTab('notifications')}
-          >
-            <Ionicons
-              name="notifications-outline"
-              size={20}
-              color={
-                activeProfileTab === 'notifications' ? colors.primary[500] : colors.text.tertiary
-              }
-            />
-            <Text
-              style={[
-                styles.subTabLabel,
-                activeProfileTab === 'notifications' && styles.subTabLabelActive,
-              ]}
-            >
-              Notifs
-            </Text>
-          </TouchableOpacity>
         </View>
 
         {/* Content based on active tab */}
-        {isLoading && activeProfileTab === 'info' ? (
+        {isLoading && activeProfileTab === 'infos' ? (
           <View style={styles.loadingSection}>
             <ActivityIndicator size="small" color={colors.primary[500]} />
           </View>

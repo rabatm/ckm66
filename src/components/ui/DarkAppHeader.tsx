@@ -8,7 +8,6 @@ import type { UserLevel } from '@/features/profile/types/badge.types'
 import { LEVELS } from '@/features/profile/types/badge.types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useNextReservation } from '@/features/schedule/hooks/useNextReservation'
-import { useSubscription } from '@/features/profile/hooks/useSubscription'
 import { useBadges } from '@/features/profile/hooks/useBadges'
 import { formatTimeRange, getDayName } from '@/features/schedule/types/course.types'
 import type { Reservation } from '@/features/schedule/types/reservation.types'
@@ -19,70 +18,11 @@ interface DarkAppHeaderProps {
   level?: UserLevel
   totalPoints?: number
   onReservationPress?: () => void
+  onBadgesPress?: () => void
 }
 
 /**
- * Payment Status Badge Component - iOS Style
- */
-interface PaymentStatusBadgeProps {
-  status: string
-}
-
-const PaymentStatusBadge: React.FC<PaymentStatusBadgeProps> = ({ status }) => {
-  const getBadgeStyle = () => {
-    switch (status) {
-      case 'paid':
-        return {
-          backgroundColor: 'rgba(52, 211, 153, 0.2)',
-          borderColor: 'rgba(52, 211, 153, 0.4)',
-          textColor: '#34D399',
-          label: 'Payé',
-        }
-      case 'pending':
-        return {
-          backgroundColor: 'rgba(251, 146, 60, 0.2)',
-          borderColor: 'rgba(251, 146, 60, 0.4)',
-          textColor: '#FB923C',
-          label: 'En attente',
-        }
-      case 'failed':
-        return {
-          backgroundColor: 'rgba(239, 68, 68, 0.2)',
-          borderColor: 'rgba(239, 68, 68, 0.4)',
-          textColor: '#EF4444',
-          label: 'Échec',
-        }
-      default:
-        return {
-          backgroundColor: 'rgba(156, 163, 175, 0.2)',
-          borderColor: 'rgba(156, 163, 175, 0.4)',
-          textColor: '#9CA3AF',
-          label: 'Inconnu',
-        }
-    }
-  }
-
-  const badgeStyle = getBadgeStyle()
-
-  return (
-    <View
-      style={[
-        styles.paymentBadge,
-        {
-          backgroundColor: badgeStyle.backgroundColor,
-          borderColor: badgeStyle.borderColor,
-        },
-      ]}
-    >
-      <Text style={[styles.paymentBadgeText, { color: badgeStyle.textColor }]}>
-        {badgeStyle.label}
-      </Text>
-    </View>
-  )
-}
-
-/**
- * Utility functions for formatting reservation and subscription data
+ * Utility functions for formatting reservation data
  */
 
 const getDateLabel = (date: Date): string => {
@@ -125,11 +65,11 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
   level = 1,
   totalPoints = 0,
   onReservationPress,
+  onBadgesPress,
 }) => {
   const { user } = useAuth()
   const { nextReservation } = useNextReservation(user?.id || '')
-  const { subscriptionInfo } = useSubscription()
-  const { badges } = useBadges()
+  const { badges, userProgress } = useBadges()
   const levelInfo = LEVELS[level]
 
   // Get the most recent badge unlocked
@@ -174,25 +114,17 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
     return `${dateLabel} - ${courseTitle} ${timeRange}`
   }, [nextReservation])
 
-  // Memoized formatted subscription info
-  const subscriptionText = useMemo(() => {
-    if (!subscriptionInfo) {
-      return 'Aucun abonnement'
+  // Memoized badges progress text
+  const badgesProgressText = useMemo(() => {
+    if (!userProgress) {
+      return { unlocked: 0, total: 0, percentage: 0 }
     }
-
-    const { statusLabel, typeLabel, daysRemaining, status, subscription } = subscriptionInfo
-    const remainingSessions = subscription?.remaining_sessions
-
-    if (status === 'active' && subscription?.type.includes('session_pack')) {
-      return `${typeLabel} - ${remainingSessions ?? 0} séances restantes`
+    return {
+      unlocked: userProgress.unlocked_badges,
+      total: userProgress.total_badges,
+      percentage: userProgress.badges_percentage,
     }
-
-    if (daysRemaining !== null && daysRemaining <= 30) {
-      return `${typeLabel} - ${daysRemaining} jours restants`
-    }
-
-    return `${typeLabel} - ${statusLabel}`
-  }, [subscriptionInfo])
+  }, [userProgress])
 
   return (
     <View style={styles.container}>
@@ -266,53 +198,47 @@ export const DarkAppHeader: React.FC<DarkAppHeaderProps> = ({
             </View>
           </TouchableOpacity>
 
-          {/* Subscription & Payment Info - Full Width Card */}
-          <View
+          {/* Badges Card - Clickable Navigation to Profile/Badges */}
+          <TouchableOpacity
             style={[
-              styles.subscriptionCard,
+              styles.badgesCard,
               {
                 backgroundColor:
                   Platform.OS === 'ios'
-                    ? user?.role === 'guest'
-                      ? 'rgba(34, 197, 94, 0.1)'
-                      : 'rgba(16, 185, 129, 0.1)'
-                    : user?.role === 'guest'
-                      ? 'rgba(34, 197, 94, 0.15)'
-                      : 'rgba(16, 185, 129, 0.15)',
+                    ? 'rgba(251, 146, 60, 0.1)'
+                    : 'rgba(251, 146, 60, 0.15)',
                 borderWidth: Platform.OS === 'ios' ? 0.5 : 0,
-                borderColor:
-                  Platform.OS === 'ios'
-                    ? user?.role === 'guest'
-                      ? 'rgba(34, 197, 94, 0.4)'
-                      : 'rgba(16, 185, 129, 0.4)'
-                    : 'transparent',
-                shadowColor: user?.role === 'guest' ? '#22C55E' : '#10B981',
+                borderColor: 'rgba(251, 146, 60, 0.4)',
               },
             ]}
+            onPress={onBadgesPress}
+            activeOpacity={0.7}
+            disabled={!onBadgesPress}
           >
-            <View style={styles.subscriptionHeader}>
-              <Ionicons
-                name="card-outline"
-                size={18}
-                color={user?.role === 'guest' ? '#22C55E' : '#10B981'}
-              />
-              <Text style={styles.subscriptionTitle}>
-                {user?.role === 'guest' ? 'Invité' : 'Abonnement'}
+            <View style={styles.badgesContent}>
+              <View style={styles.badgesHeader}>
+                <Ionicons name="trophy-outline" size={18} color="#FB923C" />
+                <Text style={styles.badgesTitle}>Badges</Text>
+              </View>
+              <Text style={styles.badgesValue}>
+                {badgesProgressText.unlocked}/{badgesProgressText.total} Débloqués
               </Text>
-            </View>
-            <Text style={styles.subscriptionValue} numberOfLines={2}>
-              {user?.role === 'guest'
-                ? `${user.free_trials_remaining || 0} cours gratuits restants`
-                : subscriptionText}
-            </Text>
-            {user?.role !== 'guest' && (
-              <View style={styles.paymentBadgeContainer}>
-                <PaymentStatusBadge
-                  status={subscriptionInfo?.subscription?.payment_status || 'unknown'}
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${badgesProgressText.percentage}%`,
+                      backgroundColor: '#FB923C',
+                    },
+                  ]}
                 />
               </View>
+            </View>
+            {onBadgesPress && (
+              <Ionicons name="chevron-forward" size={20} color="#FB923C" />
             )}
-          </View>
+          </TouchableOpacity>
         </LinearGradient>
       </BlurView>
     </View>
@@ -469,49 +395,46 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.semibold,
     color: colors.text.primary,
   },
-  // Subscription Card (merged with payment) - Full Width
-  subscriptionCard: {
+  // Badges Card - Tab Effect Navigation
+  badgesCard: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.sm,
     borderRadius: 12,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: spacing.sm,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    gap: spacing.sm,
+    shadowColor: '#FB923C',
   },
-  subscriptionHeader: {
+  badgesContent: {
+    flex: 1,
+  },
+  badgesHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
     marginBottom: spacing.xs,
   },
-  subscriptionTitle: {
+  badgesTitle: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold,
     color: colors.text.primary,
   },
-  subscriptionValue: {
-    fontSize: typography.sizes.xs,
-    color: colors.text.secondary,
-    marginBottom: spacing.xs,
-    lineHeight: 16,
-  },
-  paymentBadgeContainer: {
-    marginTop: spacing.xs,
-  },
-  // Payment Status Badge
-  paymentBadge: {
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: Platform.OS === 'ios' ? 0.5 : 0,
-    alignSelf: 'flex-start',
-  },
-  paymentBadgeText: {
-    fontSize: 10,
+  badgesValue: {
+    fontSize: typography.sizes.sm,
     fontWeight: typography.weights.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: colors.text.primary,
+    marginBottom: spacing.xs,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: 'rgba(251, 146, 60, 0.2)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
 })
